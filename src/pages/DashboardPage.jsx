@@ -27,6 +27,7 @@ import { formatBDT } from '../utils/calculations';
 import { MealRequestWidget } from '../components/MealRequestWidget';
 import { BazarRosterModal } from '../components/BazarRosterModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
+import { InviteShareCard } from '../components/InviteShareCard';
 import { Modal } from '../components/Modal';
 
 export const DashboardPage = () => {
@@ -313,6 +314,9 @@ export const DashboardPage = () => {
         </div>
       </div>
 
+      {/* Mess Invitation & Roommate Share Card (WhatsApp, Telegram, Messenger) */}
+      <InviteShareCard mess={mess} memberCount={memberBalances.length} />
+
       {/* Promotional Banners Carousel (Matching screenshot) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Banner 1 */}
@@ -490,6 +494,24 @@ export const DashboardPage = () => {
               </div>
             );
           })}
+
+          {/* If new mess with 0 or 1 member, show dashed invite card */}
+          {memberBalances.length <= 1 && (
+            <div className="bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-300 p-6 flex flex-col items-center justify-center text-center shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                <Users className="w-6 h-6" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-800">রুমমেটদের যুক্ত করুন</h4>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+                আপনার মেসে এখনো কোনো মেম্বার যুক্ত হয়নি। ইনভাইটেশন কোড পাঠিয়ে রুমমেটদের যুক্ত হতে বলুন।
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <code className="px-2.5 py-1 bg-white border border-emerald-200 text-emerald-700 font-mono font-bold text-xs rounded-lg">
+                  {mess?.invite_code || 'MESS2026'}
+                </code>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

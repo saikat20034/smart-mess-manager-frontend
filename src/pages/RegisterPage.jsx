@@ -19,11 +19,15 @@ import { useLanguage } from '../context/LanguageContext';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
-  const { addMember, updateMessSettings } = useMess();
+  const { addMember, createNewMess, mess } = useMess();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState('create'); // 'create' or 'join'
+  // Read URL query params (e.g. ?code=SAIKAT2026)
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialCode = queryParams.get('code') || '';
+
+  const [mode, setMode] = useState(initialCode ? 'join' : 'create'); // 'create' or 'join'
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,7 +35,7 @@ export const RegisterPage = () => {
     password: '',
     confirmPassword: '',
     messName: '',
-    inviteCode: ''
+    inviteCode: initialCode
   });
 
   const [error, setError] = useState('');
@@ -70,23 +74,24 @@ export const RegisterPage = () => {
       });
 
       if (res.success) {
-        // 2. Add to active mess roster
-        await addMember({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          role,
-          status: 'active'
-        });
-
-        // 3. If creating a new mess, set the mess name
-        if (mode === 'create' && formData.messName) {
-          await updateMessSettings({
-            name: formData.messName
+        if (mode === 'create') {
+          // Manager creates a fresh new mess with zero balance and zero members!
+          await createNewMess({
+            messName: formData.messName || 'আমাদের মেস',
+            managerUser: res.user
+          });
+        } else {
+          // Resident joins existing mess with invite code
+          await addMember({
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            role: 'member',
+            status: 'active'
           });
         }
 
-        // Navigate to dashboard
+        // Navigate to dashboard with fresh clean slate or joined mess
         navigate('/dashboard');
       } else {
         setError(res.error || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');

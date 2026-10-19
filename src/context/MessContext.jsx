@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { dataService, resetDemoData } from '../services/storageService';
+import { dataService, resetDemoData, createNewFreshMess } from '../services/storageService';
 import { calculateMemberBalances } from '../utils/calculations';
 
 const MessContext = createContext(null);
@@ -200,6 +200,12 @@ export const MessProvider = ({ children }) => {
     await refreshData();
   };
 
+  const createNewMess = async (params) => {
+    const fresh = createNewFreshMess(params);
+    await refreshData();
+    return fresh;
+  };
+
   const resetAllDemoData = () => {
     resetDemoData();
     refreshData();
@@ -244,6 +250,7 @@ export const MessProvider = ({ children }) => {
         deleteBazarItem,
         addBazarScheduleEntry,
         saveMealRequest,
+        createNewMess,
         resetAllDemoData
       }}
     >

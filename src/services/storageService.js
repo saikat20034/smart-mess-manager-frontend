@@ -64,6 +64,67 @@ export function resetDemoData() {
   initLocalStorageIfEmpty();
 }
 
+export function createNewFreshMess({ messName, managerUser }) {
+  const codeSuffix = Math.floor(1000 + Math.random() * 9000);
+  const cleanPrefix = (messName || 'MESS')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 4) || 'MESS';
+  const inviteCode = `${cleanPrefix}${codeSuffix}`;
+
+  const freshMess = {
+    id: `mess-${Date.now()}`,
+    name: messName || 'নতুন মেস',
+    subtitle: 'চলতি মাসের হিসাব',
+    address: 'ঢাকা, বাংলাদেশ',
+    currency: 'BDT',
+    currency_symbol: '৳',
+    invite_code: inviteCode,
+    month_start_day: 1,
+    breakfast_unit: 0.5,
+    lunch_unit: 1.0,
+    dinner_unit: 1.0,
+    shared_expense_policy: 'equal',
+    status: 'Running',
+    is_fresh: true
+  };
+
+  const initialMembers = managerUser ? [
+    {
+      id: managerUser.id,
+      name: managerUser.name,
+      phone: managerUser.phone || '',
+      email: managerUser.email || '',
+      room_number: '',
+      role: 'manager',
+      status: 'active',
+      joined_at: new Date().toISOString().split('T')[0],
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+    }
+  ] : [];
+
+  setLocalItem(STORAGE_KEYS.MESS, freshMess);
+  setLocalItem(STORAGE_KEYS.MEMBERS, initialMembers);
+  setLocalItem(STORAGE_KEYS.EXPENSES, []);
+  setLocalItem(STORAGE_KEYS.DEPOSITS, []);
+  setLocalItem(STORAGE_KEYS.MEALS, []);
+  setLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
+  setLocalItem(STORAGE_KEYS.BAZAR_LIST, []);
+  setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, []);
+  setLocalItem(STORAGE_KEYS.ACTIVITIES, [
+    {
+      id: `act-${Date.now()}`,
+      action: 'CREATE_MESS',
+      title: 'নতুন মেস তৈরি করা হয়েছে',
+      details: `${freshMess.name} সফলভাবে গঠিত হয়েছে। ইনভাইট কোড: ${inviteCode}`,
+      timestamp: new Date().toISOString()
+    }
+  ]);
+  setLocalItem(STORAGE_KEYS.MEAL_REQUESTS, { auto: false, morning: 0, lunch: 0, dinner: 0 });
+
+  return freshMess;
+}
+
 // Auto-run init
 initLocalStorageIfEmpty();
 
