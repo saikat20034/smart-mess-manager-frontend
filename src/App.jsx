@@ -1,0 +1,75 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { MessProvider } from './context/MessContext';
+import { Layout } from './components/Layout';
+
+// Pages
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { MembersPage } from './pages/MembersPage';
+import { MealsPage } from './pages/MealsPage';
+import { ExpensesPage } from './pages/ExpensesPage';
+import { DepositsPage } from './pages/DepositsPage';
+import { SettlementPage } from './pages/SettlementPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { MySummaryPage } from './pages/MySummaryPage';
+import { ActivityPage } from './pages/ActivityPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { NotFoundPage, UnauthorizedPage } from './pages/NotFoundPage';
+
+// Protected Route Guard
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <MessProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+            {/* Authenticated Dashboard & Operations */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/members" element={<MembersPage />} />
+              <Route path="/meals" element={<MealsPage />} />
+              <Route path="/expenses" element={<ExpensesPage />} />
+              <Route path="/deposits" element={<DepositsPage />} />
+              <Route path="/settlement" element={<SettlementPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/my-summary" element={<MySummaryPage />} />
+              <Route path="/activity" element={<ActivityPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* Error Pages */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </MessProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;
