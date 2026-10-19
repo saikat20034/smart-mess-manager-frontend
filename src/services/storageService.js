@@ -5,22 +5,26 @@ import {
   INITIAL_EXPENSES,
   INITIAL_DEPOSITS,
   INITIAL_MEALS,
+  INITIAL_BAZAR_LIST,
+  INITIAL_BAZAR_SCHEDULE,
   INITIAL_ACTIVITIES
 } from './demoData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
 const STORAGE_KEYS = {
-  MESS: 'smm_mess_data',
-  MEMBERS: 'smm_members',
-  CATEGORIES: 'smm_categories',
-  EXPENSES: 'smm_expenses',
-  DEPOSITS: 'smm_deposits',
-  MEALS: 'smm_meals',
-  SETTLEMENTS: 'smm_settlements',
-  ACTIVITIES: 'smm_activities'
+  MESS: 'smm_mess_data_v2',
+  MEMBERS: 'smm_members_v2',
+  CATEGORIES: 'smm_categories_v2',
+  EXPENSES: 'smm_expenses_v2',
+  DEPOSITS: 'smm_deposits_v2',
+  MEALS: 'smm_meals_v2',
+  SETTLEMENTS: 'smm_settlements_v2',
+  ACTIVITIES: 'smm_activities_v2',
+  BAZAR_LIST: 'smm_bazar_list_v2',
+  BAZAR_SCHEDULE: 'smm_bazar_schedule_v2',
+  MEAL_REQUESTS: 'smm_meal_requests_v2'
 };
 
-// Helper to safely read from localStorage
 function getLocalItem(key, fallback) {
   try {
     const val = localStorage.getItem(key);
@@ -31,7 +35,6 @@ function getLocalItem(key, fallback) {
   }
 }
 
-// Helper to safely write to localStorage
 function setLocalItem(key, data) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
@@ -40,7 +43,6 @@ function setLocalItem(key, data) {
   }
 }
 
-// Initialize localStorage with demo data if empty
 export function initLocalStorageIfEmpty() {
   if (!localStorage.getItem(STORAGE_KEYS.MESS)) {
     setLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
@@ -51,30 +53,22 @@ export function initLocalStorageIfEmpty() {
     setLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
     setLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
     setLocalItem(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
+    setLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
+    setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
+    setLocalItem(STORAGE_KEYS.MEAL_REQUESTS, { auto: false, morning: 0, lunch: 0, dinner: 0 });
   }
 }
 
 export function resetDemoData() {
-  localStorage.removeItem(STORAGE_KEYS.MESS);
-  localStorage.removeItem(STORAGE_KEYS.MEMBERS);
-  localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
-  localStorage.removeItem(STORAGE_KEYS.EXPENSES);
-  localStorage.removeItem(STORAGE_KEYS.DEPOSITS);
-  localStorage.removeItem(STORAGE_KEYS.MEALS);
-  localStorage.removeItem(STORAGE_KEYS.SETTLEMENTS);
-  localStorage.removeItem(STORAGE_KEYS.ACTIVITIES);
+  Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
   initLocalStorageIfEmpty();
 }
 
-// Auto init on load
+// Auto-run init
 initLocalStorageIfEmpty();
 
-// ============================================================================
-// DATA ACCESS LAYER
-// ============================================================================
-
 export const dataService = {
-  // 1. Mess details
+  // Mess details
   async getMess() {
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('messes').select('*').limit(1).single();
@@ -84,18 +78,14 @@ export const dataService = {
   },
 
   async updateMess(updates) {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('messes').update(updates).eq('id', updates.id).select().single();
-      if (!error && data) return data;
-    }
     const current = getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
     const updated = { ...current, ...updates, updated_at: new Date().toISOString() };
     setLocalItem(STORAGE_KEYS.MESS, updated);
-    this.logActivity('UPDATE_SETTINGS', 'Mess settings updated', `Updated mess configuration`);
+    this.logActivity('UPDATE_SETTINGS', 'মেস সেটিংস আপডেট', 'মেস তথ্য ও নিয়ম পরিবর্তন করা হয়েছে');
     return updated;
   },
 
-  // 2. Members
+  // Members
   async getMembers() {
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('mess_members').select('*').order('joined_at', { ascending: true });
@@ -109,34 +99,25 @@ export const dataService = {
       id: `mem-${Date.now()}`,
       joined_at: new Date().toISOString().split('T')[0],
       status: 'active',
-      role: 'member',
+      role: memberData.role || 'member',
       avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`,
       ...memberData
     };
 
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('mess_members').insert([newMember]).select().single();
-      if (!error && data) return data;
-    }
-
     const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
     members.push(newMember);
     setLocalItem(STORAGE_KEYS.MEMBERS, members);
-    this.logActivity('ADD_MEMBER', `Member added: ${newMember.name}`, `Room: ${newMember.room_number || 'N/A'}`);
+    this.logActivity('ADD_MEMBER', `নতুন মেম্বার: ${newMember.name}`, `রুম: ${newMember.room_number || 'N/A'}`);
     return newMember;
   },
 
   async updateMember(id, updates) {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('mess_members').update(updates).eq('id', id).select().single();
-      if (!error && data) return data;
-    }
     const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
-    const index = members.findIndex(m => m.id === id);
+    const index = members.findIndex((m) => m.id === id);
     if (index !== -1) {
       members[index] = { ...members[index], ...updates };
       setLocalItem(STORAGE_KEYS.MEMBERS, members);
-      this.logActivity('UPDATE_MEMBER', `Updated member: ${members[index].name}`, `Status: ${members[index].status}`);
+      this.logActivity('UPDATE_MEMBER', `মেম্বার আপডেট: ${members[index].name}`, `স্ট্যাটাস: ${members[index].status}`);
       return members[index];
     }
     return null;
@@ -146,25 +127,23 @@ export const dataService = {
     return this.updateMember(id, { status: 'inactive' });
   },
 
-  // 3. Categories
+  // Categories
   async getCategories() {
     return getLocalItem(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   },
 
-  // 4. Meals
+  // Meals
   async getMeals(monthYear) {
     const allMeals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
     if (!monthYear) return allMeals;
-    return allMeals.filter(m => m.date && m.date.startsWith(monthYear));
+    return allMeals.filter((m) => m.date && m.date.startsWith(monthYear));
   },
 
   async saveMealsBulk(date, memberMealEntries) {
-    // memberMealEntries: array of { member_id, breakfast, lunch, dinner, notes }
     const allMeals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
-    // remove existing for this date
-    const filtered = allMeals.filter(m => m.date !== date);
+    const filtered = allMeals.filter((m) => m.date !== date);
 
-    memberMealEntries.forEach(entry => {
+    memberMealEntries.forEach((entry) => {
       filtered.push({
         id: `meal-${date}-${entry.member_id}`,
         date,
@@ -177,36 +156,15 @@ export const dataService = {
     });
 
     setLocalItem(STORAGE_KEYS.MEALS, filtered);
-    this.logActivity('RECORD_MEALS', `Bulk meals recorded for ${date}`, `Updated ${memberMealEntries.length} members`);
-    return filtered.filter(m => m.date === date);
+    this.logActivity('RECORD_MEALS', `${date} এর মিল সংরক্ষিত`, `${memberMealEntries.length} জন সদস্যের মিল আপডেট`);
+    return filtered.filter((m) => m.date === date);
   },
 
-  async saveMealEntry(mealEntry) {
-    const allMeals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
-    const existingIdx = allMeals.findIndex(
-      m => m.date === mealEntry.date && m.member_id === mealEntry.member_id
-    );
-
-    const record = {
-      id: mealEntry.id || `meal-${mealEntry.date}-${mealEntry.member_id}`,
-      ...mealEntry
-    };
-
-    if (existingIdx !== -1) {
-      allMeals[existingIdx] = record;
-    } else {
-      allMeals.push(record);
-    }
-
-    setLocalItem(STORAGE_KEYS.MEALS, allMeals);
-    return record;
-  },
-
-  // 5. Expenses
+  // Expenses
   async getExpenses(monthYear) {
     const all = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
     if (!monthYear) return all;
-    return all.filter(e => e.date && e.date.startsWith(monthYear));
+    return all.filter((e) => e.date && e.date.startsWith(monthYear));
   },
 
   async addExpense(expenseData) {
@@ -220,19 +178,19 @@ export const dataService = {
     setLocalItem(STORAGE_KEYS.EXPENSES, expenses);
     this.logActivity(
       'RECORD_EXPENSE',
-      `Expense: ${newExpense.title}`,
-      `৳ ${newExpense.amount} (${newExpense.is_meal_related ? 'Meal Bazar' : 'Shared Cost'})`
+      `খরচ যুক্ত: ${newExpense.title}`,
+      `৳ ${newExpense.amount} (${newExpense.is_meal_related ? 'মিল বাজার' : 'যৌথ বিল'})`
     );
     return newExpense;
   },
 
   async updateExpense(id, updates) {
     const expenses = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
-    const index = expenses.findIndex(e => e.id === id);
+    const index = expenses.findIndex((e) => e.id === id);
     if (index !== -1) {
       expenses[index] = { ...expenses[index], ...updates };
       setLocalItem(STORAGE_KEYS.EXPENSES, expenses);
-      this.logActivity('UPDATE_EXPENSE', `Updated expense: ${expenses[index].title}`, `৳ ${expenses[index].amount}`);
+      this.logActivity('UPDATE_EXPENSE', `খরচ সংশোধন: ${expenses[index].title}`, `৳ ${expenses[index].amount}`);
       return expenses[index];
     }
     return null;
@@ -240,20 +198,20 @@ export const dataService = {
 
   async deleteExpense(id) {
     const expenses = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
-    const target = expenses.find(e => e.id === id);
-    const filtered = expenses.filter(e => e.id !== id);
+    const target = expenses.find((e) => e.id === id);
+    const filtered = expenses.filter((e) => e.id !== id);
     setLocalItem(STORAGE_KEYS.EXPENSES, filtered);
     if (target) {
-      this.logActivity('DELETE_EXPENSE', `Deleted expense: ${target.title}`, `৳ ${target.amount}`);
+      this.logActivity('DELETE_EXPENSE', `খরচ বাতিল: ${target.title}`, `৳ ${target.amount}`);
     }
     return true;
   },
 
-  // 6. Deposits
+  // Deposits
   async getDeposits(monthYear) {
     const all = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
     if (!monthYear) return all;
-    return all.filter(d => d.date && d.date.startsWith(monthYear));
+    return all.filter((d) => d.date && d.date.startsWith(monthYear));
   },
 
   async addDeposit(depositData) {
@@ -267,19 +225,18 @@ export const dataService = {
     setLocalItem(STORAGE_KEYS.DEPOSITS, deposits);
     this.logActivity(
       'RECORD_DEPOSIT',
-      `Deposit from ${newDeposit.member_name}`,
-      `৳ ${newDeposit.amount} via ${newDeposit.payment_method}`
+      `${newDeposit.member_name} এর জমা`,
+      `৳ ${newDeposit.amount} মাধ্যম: ${newDeposit.payment_method}`
     );
     return newDeposit;
   },
 
   async updateDeposit(id, updates) {
     const deposits = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
-    const index = deposits.findIndex(d => d.id === id);
+    const index = deposits.findIndex((d) => d.id === id);
     if (index !== -1) {
       deposits[index] = { ...deposits[index], ...updates };
       setLocalItem(STORAGE_KEYS.DEPOSITS, deposits);
-      this.logActivity('UPDATE_DEPOSIT', `Updated deposit: ৳ ${deposits[index].amount}`, `${deposits[index].member_name}`);
       return deposits[index];
     }
     return null;
@@ -287,16 +244,16 @@ export const dataService = {
 
   async deleteDeposit(id) {
     const deposits = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
-    const target = deposits.find(d => d.id === id);
-    const filtered = deposits.filter(d => d.id !== id);
+    const target = deposits.find((d) => d.id === id);
+    const filtered = deposits.filter((d) => d.id !== id);
     setLocalItem(STORAGE_KEYS.DEPOSITS, filtered);
     if (target) {
-      this.logActivity('DELETE_DEPOSIT', `Deleted deposit: ৳ ${target.amount}`, `${target.member_name}`);
+      this.logActivity('DELETE_DEPOSIT', `জমা মুছে ফেলা: ৳ ${target.amount}`, `${target.member_name}`);
     }
     return true;
   },
 
-  // 7. Monthly Settlement
+  // Settlements
   async getSettlements() {
     return getLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
   },
@@ -313,25 +270,76 @@ export const dataService = {
     setLocalItem(STORAGE_KEYS.SETTLEMENTS, settlements);
     this.logActivity(
       'FINALIZE_SETTLEMENT',
-      `Finalized settlement for ${settlementData.month}/${settlementData.year}`,
-      `Meal Rate: ৳ ${settlementData.mealRate}`
+      `${settlementData.month}/${settlementData.year} এর চূড়ান্ত হিসাব সম্পন্ন`,
+      `মিল রেট: ৳ ${settlementData.mealRate}`
     );
     return record;
   },
 
-  async reopenSettlement(id) {
-    const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
-    const target = settlements.find(s => s.id === id);
-    if (target) {
-      target.is_finalized = false;
-      target.reopened_at = new Date().toISOString();
-      setLocalItem(STORAGE_KEYS.SETTLEMENTS, settlements);
-      this.logActivity('REOPEN_SETTLEMENT', `Settlement reopened for correction`, `Month: ${target.month}/${target.year}`);
-    }
-    return target;
+  // Bazar Checklist (বাজারের ফর্দ)
+  async getBazarList() {
+    return getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
   },
 
-  // 8. Activities / Audit Trail
+  async addBazarItem(item) {
+    const list = getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
+    const newItem = {
+      id: `bitem-${Date.now()}`,
+      completed: false,
+      ...item
+    };
+    list.push(newItem);
+    setLocalItem(STORAGE_KEYS.BAZAR_LIST, list);
+    return newItem;
+  },
+
+  async toggleBazarItem(id) {
+    const list = getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
+    const target = list.find((i) => i.id === id);
+    if (target) {
+      target.completed = !target.completed;
+      setLocalItem(STORAGE_KEYS.BAZAR_LIST, list);
+    }
+    return list;
+  },
+
+  async deleteBazarItem(id) {
+    const list = getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
+    const filtered = list.filter((i) => i.id !== id);
+    setLocalItem(STORAGE_KEYS.BAZAR_LIST, filtered);
+    return filtered;
+  },
+
+  // Bazar Duty Schedule (বাজার শিডিউল)
+  async getBazarSchedule() {
+    return getLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
+  },
+
+  async addBazarScheduleEntry(entry) {
+    const schedule = getLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
+    const newEntry = {
+      id: `bsched-${Date.now()}`,
+      status: 'Upcoming',
+      ...entry
+    };
+    schedule.push(newEntry);
+    setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, schedule);
+    this.logActivity('BAZAR_DUTY', `বাজার দায়িত্ব নির্ধারিত: ${newEntry.member_name}`, `তারিখ: ${newEntry.date}`);
+    return newEntry;
+  },
+
+  // Meal Requests
+  async getMealRequests() {
+    return getLocalItem(STORAGE_KEYS.MEAL_REQUESTS, { auto: false, morning: 0, lunch: 0, dinner: 0 });
+  },
+
+  async saveMealRequest(requests) {
+    setLocalItem(STORAGE_KEYS.MEAL_REQUESTS, requests);
+    this.logActivity('MEAL_REQUEST', 'দৈনিক মিল বুকিং আপডেট', `সকাল: ${requests.morning}, দুপুর: ${requests.lunch}, রাত: ${requests.dinner}`);
+    return requests;
+  },
+
+  // Activities
   async getActivityLogs() {
     return getLocalItem(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
   },
@@ -346,7 +354,6 @@ export const dataService = {
       timestamp: new Date().toISOString()
     };
     logs.unshift(newLog);
-    // keep latest 50
     if (logs.length > 50) logs.pop();
     setLocalItem(STORAGE_KEYS.ACTIVITIES, logs);
     return newLog;

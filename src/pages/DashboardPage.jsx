@@ -1,53 +1,48 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Users,
-  UtensilsCrossed,
-  TrendingUp,
-  DollarSign,
-  CreditCard,
   Wallet,
-  AlertCircle,
-  PlusCircle,
-  ArrowUpRight,
-  ArrowDownRight,
+  Coins,
+  UtensilsCrossed,
+  Receipt,
+  Home,
+  Users,
+  Layers,
+  ArrowRight,
+  Sparkles,
+  PlayCircle,
+  Smartphone,
+  CreditCard,
+  MessageSquare,
   Calendar,
   CheckCircle2,
   Clock,
-  Sparkles
+  Eye,
+  Edit2
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  LineChart,
-  Line,
-  Legend
-} from 'recharts';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatBDT } from '../utils/calculations';
-import { MetricCard } from '../components/MetricCard';
-import { Badge } from '../components/Badge';
+import { MealRequestWidget } from '../components/MealRequestWidget';
+import { BazarRosterModal } from '../components/BazarRosterModal';
+import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { Modal } from '../components/Modal';
 
 export const DashboardPage = () => {
-  const { isManager } = useAuth();
+  const { user, isManager } = useAuth();
+  const { t, isBn } = useLanguage();
   const {
     metrics,
     memberBalances,
-    expenses,
-    meals,
-    selectedMonth,
+    mess,
     addDeposit,
-    addExpense
+    bazarSchedule
   } = useMess();
 
-  // Quick Deposit modal state
+  // Modals state
+  const [bazarRosterOpen, setBazarRosterOpen] = useState(false);
+  const [reminderTarget, setReminderTarget] = useState(null);
   const [quickDepositOpen, setQuickDepositOpen] = useState(false);
   const [depositForm, setDepositForm] = useState({
     member_id: '',
@@ -57,48 +52,15 @@ export const DashboardPage = () => {
     notes: ''
   });
 
-  // Prepare chart data: Income vs Expenses
-  const financialChartData = React.useMemo(() => {
-    return [
-      {
-        name: 'Food Bazar',
-        amount: metrics.mealExpenses,
-        color: '#10b981'
-      },
-      {
-        name: 'Shared Bills',
-        amount: metrics.sharedExpenses,
-        color: '#6366f1'
-      },
-      {
-        name: 'Total Spent',
-        amount: metrics.totalExpenses,
-        color: '#f59e0b'
-      },
-      {
-        name: 'Deposits',
-        amount: metrics.totalDeposits,
-        color: '#059669'
-      }
-    ];
-  }, [metrics]);
-
-  // Prepare daily meal chart data
-  const dailyMealsData = React.useMemo(() => {
-    const dayMap = {};
-    meals.forEach((m) => {
-      const day = m.date.slice(8); // '01', '02', etc.
-      if (!dayMap[day]) {
-        dayMap[day] = { day: `Day ${parseInt(day, 10)}`, breakfast: 0, lunch: 0, dinner: 0, total: 0 };
-      }
-      dayMap[day].breakfast += Number(m.breakfast || 0);
-      dayMap[day].lunch += Number(m.lunch || 0);
-      dayMap[day].dinner += Number(m.dinner || 0);
-      dayMap[day].total += (Number(m.breakfast || 0) * 0.5) + Number(m.lunch || 0) + Number(m.dinner || 0);
-    });
-
-    return Object.values(dayMap).sort((a, b) => parseInt(a.day.slice(4)) - parseInt(b.day.slice(4)));
-  }, [meals]);
+  // Find logged-in user summary or default to first member (Saikat)
+  const currentMember =
+    memberBalances.find((m) => m.name.toLowerCase() === (user?.name || '').toLowerCase()) ||
+    memberBalances[0] || {
+      mealUnits: 23.0,
+      totalDeposits: 1597.13,
+      totalCost: 1612.98,
+      netBalance: -15.85
+    };
 
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
@@ -127,287 +89,434 @@ export const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Active Period: {selectedMonth}
+      {/* Top Main Section (Left Mess Summary + Right Personal & Meal Request) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Mess Summary Card (Matching screenshot) */}
+        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          {/* Dark Header */}
+          <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold truncate max-w-[200px]">
+                {mess?.name || 'আপাতত নাম নাই, ...'}
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {mess?.subtitle || 'চলতি মাসের হিসাব'}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>{t('running')}</span>
+            </div>
+          </div>
+
+          {/* Key Metric Rows */}
+          <div className="p-4 space-y-3.5 text-xs text-slate-700">
+            {/* মেস ব্যালেন্স */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('messBalance')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {formatBDT(metrics.cashInHand)}
+              </span>
+            </div>
+
+            {/* মেসের মোট জমা */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('totalDeposits')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {formatBDT(metrics.totalDeposits)}
+              </span>
+            </div>
+
+            {/* মোট মিল */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center">
+                  <UtensilsCrossed className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('totalMeals')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {metrics.totalMealUnits.toFixed(2)}
+              </span>
+            </div>
+
+            {/* মোট মিল খরচ */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('totalMealCost')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {formatBDT(metrics.mealExpenses)}
+              </span>
+            </div>
+
+            {/* মিল রেট */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Home className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('mealRate')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {formatBDT(metrics.mealRate)}
+              </span>
+            </div>
+
+            {/* মোট একক অন্যান্য খরচ */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('individualExpense')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                ৳ 0.00
+              </span>
+            </div>
+
+            {/* মোট যৌথ অন্যান্য খরচ */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-slate-600">{t('sharedExpense')}</span>
+              </div>
+              <span className="font-bold font-mono text-slate-900 text-sm">
+                {formatBDT(metrics.sharedExpenses)}
+              </span>
+            </div>
+
+            {/* Pink 'বিস্তারিত হিসাব' Button */}
+            <div className="pt-2">
+              <Link
+                to="/settlement"
+                className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-xl flex items-center justify-center transition-colors text-center border border-rose-100"
+              >
+                {t('detailedCalcBtn')}
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: "আমার হিসাব" + "মিল রিকুয়েস্ট" + "বাজারের তারিখ" */}
+        <div className="lg:col-span-8 space-y-5">
+          {/* "আমার হিসাব" Header & 4 Colorful Cards (Matching screenshot) */}
+          <div>
+            <h3 className="text-sm font-bold text-rose-500 mb-3">
+              {t('myAccountTitle')}
+            </h3>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* মোট মিল (Light Blue) */}
+              <div className="bg-[#e0f2fe] rounded-2xl p-4 border border-sky-100/60 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-sky-200/80 text-sky-800 flex items-center justify-center mb-2">
+                  <UtensilsCrossed className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                    {currentMember?.mealUnits?.toFixed(2) || '23.00'}
+                  </h4>
+                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                    {t('myTotalMeals')}
+                  </span>
+                </div>
+              </div>
+
+              {/* মোট জমা (Light Teal / Emerald) */}
+              <div className="bg-[#d1fae5] rounded-2xl p-4 border border-emerald-100/60 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-emerald-200/80 text-emerald-800 flex items-center justify-center mb-2">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                    {currentMember?.totalDeposits?.toFixed(2) || '1597.13'} <span className="text-xs">৳</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                    {t('myTotalDeposits')}
+                  </span>
+                </div>
+              </div>
+
+              {/* মোট খরচ (Light Pink) */}
+              <div className="bg-[#fce7f3] rounded-2xl p-4 border border-pink-100/60 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-pink-200/80 text-pink-800 flex items-center justify-center mb-2">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                    {currentMember?.totalCost?.toFixed(2) || '1612.98'} <span className="text-xs">৳</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                    {t('myTotalExpenses')}
+                  </span>
+                </div>
+              </div>
+
+              {/* ব্যালেন্স (Light Yellow / Amber) */}
+              <div className="bg-[#fef3c7] rounded-2xl p-4 border border-amber-100/60 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-amber-200/80 text-amber-800 flex items-center justify-center mb-2">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4
+                    className={`text-xl font-bold font-mono ${
+                      currentMember?.netBalance >= 0 ? 'text-emerald-700' : 'text-slate-900'
+                    }`}
+                  >
+                    {currentMember?.netBalance?.toFixed(2) || '-15.85'} <span className="text-xs">৳</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                    {t('myBalance')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* "মিল রিকুয়েস্ট" Card (Interactive) */}
+          <MealRequestWidget />
+
+          {/* "আমার বাজারের তারিখ" Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-rose-500">
+                {t('myBazarDateTitle')}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                পরবর্তী নির্ধারিত বাজার: <strong className="text-slate-800">১৯ অক্টোবর (নাসির)</strong>
+              </p>
+            </div>
+
+            <button
+              onClick={() => setBazarRosterOpen(true)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            >
+              {t('setBazarDateBtn')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Promotional Banners Carousel (Matching screenshot) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Banner 1 */}
+        <div className="bg-gradient-to-r from-rose-500 to-red-600 rounded-2xl p-5 text-white flex items-center justify-between shadow-xs">
+          <div>
+            <h4 className="text-base font-bold">
+              দেখুন কিভাবে অ্যাপটি ব্যবহার করবেন
+            </h4>
+            <p className="text-xs text-rose-100 mt-1">
+              ইউজার গাইড ও ভিডিও টিউটোরিয়াল
+            </p>
+            <button
+              onClick={() => alert('ভিডিও গাইড শীঘ্রই আসছে!')}
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            >
+              <span>Watch Video</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="hidden sm:block text-rose-200">
+            <PlayCircle className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+
+        {/* Banner 2 */}
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-5 text-white flex items-center justify-between shadow-xs">
+          <div>
+            <h4 className="text-base font-bold">
+              ২০১৯ থেকে হাজারো মেসের আস্থা
+            </h4>
+            <p className="text-xs text-emerald-100 mt-1">
+              স্বচ্ছ হিসাব ও ঝামেলাহীন মেস লাইফ
+            </p>
+            <span className="mt-3 inline-block px-3 py-1 bg-white/20 text-white rounded-lg text-xs font-semibold">
+              100k+ on Google Play
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Mess Overview & Financial Health
-          </h1>
-          <p className="mt-1 text-xs text-slate-300 max-w-xl">
-            Live calculation of meal rates, bazar expenses, student deposits, and net balances in Bangladeshi Taka (৳).
+          <div className="hidden sm:block text-emerald-200">
+            <Smartphone className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+      </div>
+
+      {/* "সকল মেম্বার" Grid Section (Total 7 Members - Matching reference screenshot) */}
+      <div className="space-y-4">
+        <div className="text-center">
+          <h2 className="text-lg font-bold text-rose-500">
+            {t('allMembersTitle')}
+          </h2>
+          <p className="text-xs text-slate-500">
+            {t('totalMembersCount', { count: memberBalances.length })}
           </p>
         </div>
 
-        {isManager && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setQuickDepositOpen(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>Record Deposit</span>
-            </button>
-            <Link
-              to="/meals"
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm"
-            >
-              <UtensilsCrossed className="w-4 h-4" />
-              <span>Enter Daily Meals</span>
-            </Link>
-          </div>
-        )}
-      </div>
+        {/* Member Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {memberBalances.map((member) => {
+            const isDue = member.netBalance < 0;
 
-      {/* 6 Key Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MetricCard
-          title="Active Members"
-          value={`${metrics.activeMembers} / ${metrics.totalMembers}`}
-          subtitle="Registered residents"
-          icon={Users}
-          color="indigo"
-        />
-        <MetricCard
-          title="Total Meals"
-          value={metrics.totalMealUnits.toFixed(1)}
-          subtitle="Current month units"
-          icon={UtensilsCrossed}
-          color="emerald"
-        />
-        <MetricCard
-          title="Current Meal Rate"
-          value={formatBDT(metrics.mealRate)}
-          subtitle="৳ per meal unit"
-          icon={TrendingUp}
-          color="amber"
-        />
-        <MetricCard
-          title="Total Expenses"
-          value={formatBDT(metrics.totalExpenses)}
-          subtitle={`Bazar: ${formatBDT(metrics.mealExpenses)}`}
-          icon={DollarSign}
-          color="blue"
-        />
-        <MetricCard
-          title="Total Deposits"
-          value={formatBDT(metrics.totalDeposits)}
-          subtitle="Collected payments"
-          icon={CreditCard}
-          color="emerald"
-        />
-        <MetricCard
-          title="Cash in Hand"
-          value={formatBDT(metrics.cashInHand)}
-          subtitle={metrics.cashInHand >= 0 ? 'Surplus balance' : 'Deficit / Shortage'}
-          icon={Wallet}
-          color={metrics.cashInHand >= 0 ? 'emerald' : 'rose'}
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Income vs Expenses Bar Chart */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-slate-900 text-sm">Financial Distribution</h3>
-              <p className="text-xs text-slate-500">Meal Bazar vs Overhead vs Deposits (BDT)</p>
-            </div>
-            <Badge variant="primary" size="sm">
-              Live Recalculation
-            </Badge>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={financialChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <YAxis
-                  tickFormatter={(val) => `৳${val}`}
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  formatter={(value) => [formatBDT(value), 'Amount']}
-                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                />
-                <Bar dataKey="amount" fill="#059669" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Daily Meal Activity Trend */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-slate-900 text-sm">Daily Meal Consumption</h3>
-              <p className="text-xs text-slate-500">Total meal units recorded by date</p>
-            </div>
-            <Link to="/meals" className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
-              View Matrix &rarr;
-            </Link>
-          </div>
-          <div className="h-64">
-            {dailyMealsData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dailyMealsData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                  />
-                  <Line type="monotone" dataKey="total" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No daily meals recorded for this month yet.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Member Balances & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Member Balances Table */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-slate-900 text-sm">Member Accounts & Net Balances</h3>
-              <p className="text-xs text-slate-500">
-                Positive = Credit (Mess owes member), Negative = Due (Member owes mess)
-              </p>
-            </div>
-            <Link
-              to="/settlement"
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-            >
-              <span>Settlement Sheet</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 text-[11px] font-semibold text-slate-500 uppercase border-b border-slate-100">
-                  <th className="py-3 px-4">Member</th>
-                  <th className="py-3 px-3 text-center">Meals</th>
-                  <th className="py-3 px-3 text-right">Deposits</th>
-                  <th className="py-3 px-3 text-right">Total Cost</th>
-                  <th className="py-3 px-4 text-right">Net Balance</th>
-                  <th className="py-3 px-3 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {memberBalances.map((member) => (
-                  <tr key={member.memberId} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-medium text-slate-800">
-                      <div>
-                        <span className="font-semibold">{member.name}</span>
-                        {member.roomNumber && (
-                          <span className="text-[10px] text-slate-400 ml-1.5 font-normal">
-                            (Room {member.roomNumber})
-                          </span>
-                        )}
+            return (
+              <div
+                key={member.memberId}
+                className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div>
+                  {/* Card Header: Avatar, Name, Status Pill, Balance */}
+                  <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">
+                        {member.name.slice(0, 2).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="py-3 px-3 text-center text-slate-600 font-mono">
-                      {member.mealUnits.toFixed(1)}
-                    </td>
-                    <td className="py-3 px-3 text-right text-slate-700 font-mono">
-                      {formatBDT(member.totalDeposits)}
-                    </td>
-                    <td className="py-3 px-3 text-right text-slate-600 font-mono">
-                      {formatBDT(member.totalCost)}
-                    </td>
-                    <td
-                      className={`py-3 px-4 text-right font-mono font-bold ${
-                        member.netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {formatBDT(member.netBalance)}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <Badge variant={member.netBalance >= 0 ? 'credit' : 'due'} size="sm">
-                        {member.netBalance >= 0 ? 'Credit' : 'Due'}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">
+                          {member.name}
+                        </h4>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isDue ? 'bg-rose-500' : 'bg-emerald-500'
+                            }`}
+                          ></span>
+                          <span
+                            className={`text-[10px] font-semibold ${
+                              isDue ? 'text-rose-500' : 'text-emerald-600'
+                            }`}
+                          >
+                            {isDue ? t('dueTag') : t('receivableTag')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-        {/* Recent Bazar Expenses */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <div>
-                <h3 className="font-semibold text-slate-900 text-sm">Recent Bazar Entries</h3>
-                <p className="text-xs text-slate-500">Latest recorded expenses</p>
-              </div>
-              <Link to="/expenses" className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
-                All Bazar &rarr;
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              {expenses.slice(0, 5).map((exp) => (
-                <div
-                  key={exp.id}
-                  className="p-2.5 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors flex items-center justify-between"
-                >
-                  <div>
-                    <h5 className="text-xs font-semibold text-slate-800">{exp.title}</h5>
-                    <p className="text-[11px] text-slate-400">
-                      Paid by {exp.paid_by_name || 'Tanvir'} • {exp.date}
-                    </p>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block">ব্যালেন্স</span>
+                      <span
+                        className={`text-sm font-bold font-mono ${
+                          isDue ? 'text-rose-500' : 'text-emerald-600'
+                        }`}
+                      >
+                        {formatBDT(member.netBalance)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-bold text-slate-900 font-mono block">
-                      {formatBDT(exp.amount)}
-                    </span>
-                    <Badge variant={exp.is_meal_related ? 'primary' : 'default'} size="sm">
-                      {exp.is_meal_related ? 'Meal' : 'Shared'}
-                    </Badge>
+
+                  {/* 2-Column Details Table (Matching screenshot) */}
+                  <div className="mt-3 space-y-1.5 text-[11px] text-slate-600">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">{t('cardMeals')}</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {member.mealUnits.toFixed(2)}
+                      </span>
+                      <span className="text-slate-400 ml-3">{t('cardDeposits')}</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {formatBDT(member.totalDeposits)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-slate-400">{t('cardMealCost')}</span>
+                      <span className="font-mono text-slate-700">
+                        {formatBDT(member.mealCost)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">{t('cardIndividualCost')}</span>
+                      <span className="font-mono text-slate-700">0.00 ৳</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">{t('cardSharedCost')}</span>
+                      <span className="font-mono text-slate-700">
+                        {formatBDT(member.sharedCost)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 font-bold">
+                      <span className="text-slate-800">{t('cardTotalCost')}</span>
+                      <span className="font-mono text-rose-500">
+                        {formatBDT(member.totalCost)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <Link
-              to="/expenses"
-              className="w-full block text-center py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200"
-            >
-              Add New Bazar Entry
-            </Link>
-          </div>
+                {/* Card Quick Action Buttons */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => {
+                      setDepositForm({
+                        member_id: member.memberId,
+                        amount: isDue ? Math.abs(member.netBalance) : '',
+                        payment_method: 'bKash',
+                        transaction_ref: '',
+                        notes: ''
+                      });
+                      setQuickDepositOpen(true);
+                    }}
+                    className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold rounded-lg text-center transition-colors cursor-pointer"
+                  >
+                    {t('recordDeposit')}
+                  </button>
+
+                  {isDue && (
+                    <button
+                      onClick={() => setReminderTarget(member)}
+                      className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                      title="হোয়াটসঅ্যাপে বকেয়া তাগাদা মেসেজ পাঠান"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>তাগাদা</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {/* Bazar Roster Modal */}
+      <BazarRosterModal
+        isOpen={bazarRosterOpen}
+        onClose={() => setBazarRosterOpen(false)}
+      />
+
+      {/* WhatsApp Due Reminder Modal */}
+      <WhatsAppReminderModal
+        isOpen={Boolean(reminderTarget)}
+        onClose={() => setReminderTarget(null)}
+        member={reminderTarget}
+        mess={mess}
+      />
 
       {/* Quick Deposit Modal */}
       <Modal
         isOpen={quickDepositOpen}
         onClose={() => setQuickDepositOpen(false)}
-        title="Record Member Deposit"
+        title="মেম্বার জমা যুক্ত করুন"
       >
         <form onSubmit={handleDepositSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              Select Member *
+              মেম্বার নির্বাচন করুন *
             </label>
             <select
               required
@@ -415,10 +524,10 @@ export const DashboardPage = () => {
               onChange={(e) => setDepositForm({ ...depositForm, member_id: e.target.value })}
               className="w-full text-xs rounded-lg border border-slate-200 p-2.5 bg-white focus:border-emerald-500 focus:outline-none"
             >
-              <option value="">-- Choose Member --</option>
+              <option value="">-- মেম্বার বাছাই করুন --</option>
               {memberBalances.map((m) => (
                 <option key={m.memberId} value={m.memberId}>
-                  {m.name} ({m.roomNumber || 'Room N/A'}) - Current Balance: {formatBDT(m.netBalance)}
+                  {m.name} - ব্যালেন্স: {formatBDT(m.netBalance)}
                 </option>
               ))}
             </select>
@@ -426,60 +535,47 @@ export const DashboardPage = () => {
 
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              Deposit Amount (BDT ৳) *
+              জমার পরিমাণ (BDT ৳) *
             </label>
             <input
               type="number"
               required
               min="1"
               step="any"
-              placeholder="e.g. 3000"
+              placeholder="যেমন: ১৫০০"
               value={depositForm.amount}
               onChange={(e) => setDepositForm({ ...depositForm, amount: e.target.value })}
-              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none"
+              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none font-mono"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              Payment Method *
+              পেমেন্ট মাধ্যম *
             </label>
             <select
               value={depositForm.payment_method}
               onChange={(e) => setDepositForm({ ...depositForm, payment_method: e.target.value })}
               className="w-full text-xs rounded-lg border border-slate-200 p-2.5 bg-white focus:border-emerald-500 focus:outline-none"
             >
-              <option value="bKash">bKash</option>
-              <option value="Nagad">Nagad</option>
-              <option value="Rocket">Rocket</option>
-              <option value="Cash">Cash to Manager</option>
-              <option value="Bank">Bank Transfer</option>
+              <option value="bKash">bKash (বিকাশ)</option>
+              <option value="Nagad">Nagad (নগদ)</option>
+              <option value="Rocket">Rocket (রকেট)</option>
+              <option value="Cash">Cash (ক্যাশ জমা)</option>
+              <option value="Bank">Bank Transfer (ব্যাংক)</option>
             </select>
           </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              Transaction Reference / TrxID (Optional)
+              ট্রানজেকশন রেফারেন্স / TrxID (ঐচ্ছিক)
             </label>
             <input
               type="text"
-              placeholder="e.g. BKASH8X9102"
+              placeholder="যেমন: BKASH8X9102"
               value={depositForm.transaction_ref}
               onChange={(e) => setDepositForm({ ...depositForm, transaction_ref: e.target.value })}
-              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
-              Notes (Optional)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. October 1st installment"
-              value={depositForm.notes}
-              onChange={(e) => setDepositForm({ ...depositForm, notes: e.target.value })}
-              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none"
+              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none font-mono"
             />
           </div>
 
@@ -487,15 +583,15 @@ export const DashboardPage = () => {
             <button
               type="button"
               onClick={() => setQuickDepositOpen(false)}
-              className="px-4 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg"
+              className="px-4 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
             >
-              Cancel
+              বাতিল
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs"
+              className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer"
             >
-              Record Payment
+              জমা সম্পন্ন করুন
             </button>
           </div>
         </form>

@@ -4,13 +4,13 @@ import { isSupabaseConfigured, supabase } from '../services/supabase';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Default demo user: Tanvir Ahmed (Manager)
+  // Default user: Saikat (Manager) as in user screenshot
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('smm_auth_user');
+    const saved = localStorage.getItem('smm_auth_user_v2');
     return saved ? JSON.parse(saved) : {
       id: 'mem-001',
-      name: 'Tanvir Ahmed',
-      email: 'tanvir@du.ac.bd',
+      name: 'Saikat',
+      email: 'saikat@mess.ac.bd',
       phone: '01711223344',
       role: 'manager',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
@@ -21,18 +21,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('smm_auth_user', JSON.stringify(user));
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(user));
     } else {
-      localStorage.removeItem('smm_auth_user');
+      localStorage.removeItem('smm_auth_user_v2');
     }
   }, [user]);
 
-  // Demo 1-click login as Manager
+  // Demo 1-click login as Manager (Saikat)
   const loginAsManager = () => {
     const managerUser = {
       id: 'mem-001',
-      name: 'Tanvir Ahmed (Manager)',
-      email: 'tanvir@du.ac.bd',
+      name: 'Saikat',
+      email: 'saikat@mess.ac.bd',
       phone: '01711223344',
       role: 'manager',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
@@ -41,12 +41,12 @@ export const AuthProvider = ({ children }) => {
     return managerUser;
   };
 
-  // Demo 1-click login as Member
+  // Demo 1-click login as Member (নাসির)
   const loginAsMember = () => {
     const memberUser = {
       id: 'mem-002',
-      name: 'Arif Hossain (Member)',
-      email: 'arif@du.ac.bd',
+      name: 'নাসির',
+      email: 'nasir@mess.ac.bd',
       phone: '01822334455',
       role: 'member',
       avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop'
@@ -55,10 +55,10 @@ export const AuthProvider = ({ children }) => {
     return memberUser;
   };
 
-  // Switch role seamlessly for testing
+  // Switch role seamlessly
   const switchRole = (newRole) => {
     if (!user) return;
-    setUser(prev => ({
+    setUser((prev) => ({
       ...prev,
       role: newRole
     }));
@@ -70,19 +70,18 @@ export const AuthProvider = ({ children }) => {
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // In real Supabase, fetch profile & role
         const loggedUser = {
           id: data.user.id,
           email: data.user.email,
           name: data.user.user_metadata?.full_name || email.split('@')[0],
-          role: 'manager'
+          role: 'manager',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
         };
         setUser(loggedUser);
-        return { success: true };
+        return { success: true, user: loggedUser };
       } else {
-        // Local simulation: if email contains 'member' assign member role, otherwise manager
-        const isMember = email.toLowerCase().includes('member');
-        const simulatedUser = isMember ? loginAsMember() : loginAsManager();
+        const isResident = email.toLowerCase().includes('member') || email.toLowerCase().includes('resident');
+        const simulatedUser = isResident ? loginAsMember() : loginAsManager();
         return { success: true, user: simulatedUser };
       }
     } catch (err) {
@@ -92,7 +91,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async ({ name, email, password, role = 'manager' }) => {
+  // Full signup functionality
+  const register = async ({ name, email, phone, password, role = 'member' }) => {
     setLoading(true);
     try {
       if (isSupabaseConfigured && supabase) {
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
           email,
           password,
           options: {
-            data: { full_name: name }
+            data: { full_name: name, phone }
           }
         });
         if (error) throw error;
@@ -108,17 +108,20 @@ export const AuthProvider = ({ children }) => {
           id: data.user?.id || `user-${Date.now()}`,
           name,
           email,
-          role
+          phone,
+          role,
+          avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`
         };
         setUser(newUser);
-        return { success: true };
+        return { success: true, user: newUser };
       } else {
         const newUser = {
           id: `mem-${Date.now()}`,
           name,
           email,
+          phone,
           role,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+          avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`
         };
         setUser(newUser);
         return { success: true, user: newUser };
@@ -132,7 +135,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('smm_auth_user');
+    localStorage.removeItem('smm_auth_user_v2');
   };
 
   return (

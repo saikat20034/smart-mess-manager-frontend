@@ -17,9 +17,12 @@ export const MessProvider = ({ children }) => {
   const [deposits, setDeposits] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [bazarList, setBazarList] = useState([]);
+  const [bazarSchedule, setBazarSchedule] = useState([]);
+  const [mealRequests, setMealRequests] = useState({ auto: false, morning: 0, lunch: 0, dinner: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Load all data for current selection
+  // Load all data
   const refreshData = useCallback(async () => {
     setLoading(true);
     try {
@@ -31,7 +34,10 @@ export const MessProvider = ({ children }) => {
         expensesData,
         depositsData,
         settlementsData,
-        activitiesData
+        activitiesData,
+        bazarListData,
+        bazarSchedData,
+        mealReqData
       ] = await Promise.all([
         dataService.getMess(),
         dataService.getMembers(),
@@ -40,7 +46,10 @@ export const MessProvider = ({ children }) => {
         dataService.getExpenses(selectedMonth),
         dataService.getDeposits(selectedMonth),
         dataService.getSettlements(),
-        dataService.getActivityLogs()
+        dataService.getActivityLogs(),
+        dataService.getBazarList(),
+        dataService.getBazarSchedule(),
+        dataService.getMealRequests()
       ]);
 
       setMess(messData);
@@ -51,6 +60,9 @@ export const MessProvider = ({ children }) => {
       setDeposits(depositsData);
       setSettlements(settlementsData);
       setActivities(activitiesData);
+      setBazarList(bazarListData);
+      setBazarSchedule(bazarSchedData);
+      setMealRequests(mealReqData);
     } catch (err) {
       console.error('Error refreshing mess data:', err);
     } finally {
@@ -129,8 +141,9 @@ export const MessProvider = ({ children }) => {
   };
 
   const addMember = async (memberData) => {
-    await dataService.addMember(memberData);
+    const newMem = await dataService.addMember(memberData);
     await refreshData();
+    return newMem;
   };
 
   const updateMember = async (id, updates) => {
@@ -161,6 +174,32 @@ export const MessProvider = ({ children }) => {
     return record;
   };
 
+  // Bazar actions
+  const addBazarItem = async (item) => {
+    await dataService.addBazarItem(item);
+    await refreshData();
+  };
+
+  const toggleBazarItem = async (id) => {
+    await dataService.toggleBazarItem(id);
+    await refreshData();
+  };
+
+  const deleteBazarItem = async (id) => {
+    await dataService.deleteBazarItem(id);
+    await refreshData();
+  };
+
+  const addBazarScheduleEntry = async (entry) => {
+    await dataService.addBazarScheduleEntry(entry);
+    await refreshData();
+  };
+
+  const saveMealRequest = async (requests) => {
+    await dataService.saveMealRequest(requests);
+    await refreshData();
+  };
+
   const resetAllDemoData = () => {
     resetDemoData();
     refreshData();
@@ -179,6 +218,9 @@ export const MessProvider = ({ children }) => {
         deposits,
         settlements,
         activities,
+        bazarList,
+        bazarSchedule,
+        mealRequests,
         loading,
         refreshData,
         // Calculated data
@@ -197,6 +239,11 @@ export const MessProvider = ({ children }) => {
         deactivateMember,
         updateMessSettings,
         finalizeMonthlySettlement,
+        addBazarItem,
+        toggleBazarItem,
+        deleteBazarItem,
+        addBazarScheduleEntry,
+        saveMealRequest,
         resetAllDemoData
       }}
     >
