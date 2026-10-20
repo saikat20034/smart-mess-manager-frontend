@@ -50,7 +50,10 @@ export const TRANSLATIONS = {
     // Bazar Schedule
     myBazarDateTitle: 'আমার বাজারের তারিখ',
     setBazarDateBtn: 'বাজার ডেট সেট করুন',
-    nextBazar: 'পরবর্তী বাজার দায়িত্ব',
+    nextBazar: 'পরবর্তী নির্ধারিত বাজার',
+    noBazarScheduled: 'এখনও কোনো বাজার ডেট নির্ধারিত হয়নি',
+    noBazarForMember: 'আপনার কোনো বাজার দায়িত্ব নির্ধারিত হয়নি',
+    dutyForYou: 'আপনার দায়িত্ব',
 
     // All Members Grid
     allMembersTitle: 'সকল মেম্বার',
@@ -136,7 +139,10 @@ export const TRANSLATIONS = {
     // Bazar Schedule
     myBazarDateTitle: 'My Bazar Duty Date',
     setBazarDateBtn: 'Set Bazar Date',
-    nextBazar: 'Upcoming Bazar Duty',
+    nextBazar: 'Next Scheduled Bazar',
+    noBazarScheduled: 'No bazar date scheduled yet',
+    noBazarForMember: 'No bazar duty assigned to you yet',
+    dutyForYou: 'Your Duty',
 
     // All Members Grid
     allMembersTitle: 'All Members',

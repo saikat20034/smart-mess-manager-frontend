@@ -13,6 +13,14 @@ export const BazarRosterModal = ({ isOpen, onClose }) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [success, setSuccess] = useState(false);
 
+  React.useEffect(() => {
+    if (members && members.length > 0) {
+      if (!selectedMemberId || !members.some((m) => m.id === selectedMemberId)) {
+        setSelectedMemberId(members[0].id);
+      }
+    }
+  }, [members, selectedMemberId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const mem = members.find((m) => m.id === selectedMemberId);
@@ -31,6 +39,16 @@ export const BazarRosterModal = ({ isOpen, onClose }) => {
     }, 1200);
   };
 
+  const activeMemberIds = new Set((members || []).map((m) => m.id));
+  const activeMemberNames = new Set((members || []).map((m) => (m.name || '').trim().toLowerCase()));
+
+  // Only show schedule for members who have actually joined the mess
+  const activeRoster = (bazarSchedule || []).filter(
+    (item) =>
+      activeMemberIds.has(item.member_id) ||
+      activeMemberNames.has((item.member_name || '').trim().toLowerCase())
+  );
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="বাজারের তারিখ নির্ধারণ করুন (Bazar Duty Roster)">
       <div className="space-y-4">
@@ -38,23 +56,29 @@ export const BazarRosterModal = ({ isOpen, onClose }) => {
         <div>
           <h4 className="text-xs font-bold text-slate-700 mb-2">আসন্ন বাজার দায়িত্ব সূচি</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {bazarSchedule.map((item) => (
-              <div
-                key={item.id}
-                className="p-2.5 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between text-xs"
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold text-slate-800">{item.member_name}</span>
-                </div>
-                <div className="flex items-center gap-2 font-mono">
-                  <span className="text-slate-500">{item.date}</span>
-                  <Badge variant={item.status === 'Completed' ? 'primary' : 'warning'} size="sm">
-                    {item.status}
-                  </Badge>
-                </div>
+            {activeRoster.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                এখনও কোনো বাজার দায়িত্ব নির্ধারণ করা হয়নি। নিচের ফর্ম থেকে তারিখ সেট করুন।
               </div>
-            ))}
+            ) : (
+              activeRoster.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-2.5 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-emerald-600" />
+                    <span className="font-semibold text-slate-800">{item.member_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono">
+                    <span className="text-slate-500">{item.date}</span>
+                    <Badge variant={item.status === 'Completed' ? 'primary' : 'warning'} size="sm">
+                      {item.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

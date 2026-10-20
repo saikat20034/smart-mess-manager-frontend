@@ -36,6 +36,7 @@ export const DashboardPage = () => {
   const {
     metrics,
     memberBalances,
+    members,
     mess,
     addDeposit,
     bazarSchedule
@@ -57,11 +58,54 @@ export const DashboardPage = () => {
   const currentMember =
     memberBalances.find((m) => m.name.toLowerCase() === (user?.name || '').toLowerCase()) ||
     memberBalances[0] || {
-      mealUnits: 23.0,
-      totalDeposits: 1597.13,
-      totalCost: 1612.98,
-      netBalance: -15.85
+      mealUnits: 0,
+      totalDeposits: 0,
+      totalCost: 0,
+      netBalance: 0
     };
+
+  // Only consider schedules for members who have actually joined this mess
+  const activeMemberIds = new Set((members || []).map((m) => m.id));
+  const activeMemberNames = new Set((members || []).map((m) => (m.name || '').trim().toLowerCase()));
+
+  const validSchedules = (bazarSchedule || []).filter((s) => {
+    return (
+      activeMemberIds.has(s.member_id) ||
+      activeMemberNames.has((s.member_name || '').trim().toLowerCase())
+    );
+  });
+
+  // Next upcoming duty in mess (only for joined members)
+  const nextUpcomingBazar = validSchedules
+    .filter((s) => s.status === 'Upcoming')
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+  // Helper to format date in Bengali or English
+  const formatScheduleDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = d.getDate();
+      const monthIndex = d.getMonth();
+      const bnMonths = [
+        'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+        'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+      ];
+      const enMonths = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      if (isBn) {
+        const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        const bnDay = String(day).replace(/[0-9]/g, (w) => bnDigits[Number(w)]);
+        return `${bnDay} ${bnMonths[monthIndex]}`;
+      }
+      return `${day} ${enMonths[monthIndex]}`;
+    } catch {
+      return dateStr;
+    }
+  };
 
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
@@ -300,7 +344,21 @@ export const DashboardPage = () => {
                 {t('myBazarDateTitle')}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                পরবর্তী নির্ধারিত বাজার: <strong className="text-slate-800">১৯ অক্টোবর (নাসির)</strong>
+                {nextUpcomingBazar ? (
+                  <>
+                    {t('nextBazar')}:{' '}
+                    <strong className="text-slate-800">
+                      {formatScheduleDate(nextUpcomingBazar.date)} ({nextUpcomingBazar.member_name})
+                    </strong>
+                  </>
+                ) : (
+                  <>
+                    {t('nextBazar')}:{' '}
+                    <span className="text-slate-400 font-medium">
+                      {t('noBazarScheduled')}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
 

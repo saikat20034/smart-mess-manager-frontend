@@ -330,7 +330,7 @@ export const INITIAL_BAZAR_LIST = [
 // Bazar Duty Roster (বাজারের শিডিউল)
 export const INITIAL_BAZAR_SCHEDULE = [
   { id: 'bsched-1', date: `${currentYear}-${currentMonth}-18`, member_id: 'mem-001', member_name: 'Saikat', status: 'Completed' },
-  { id: 'bsched-2', date: `${currentYear}-${currentMonth}-19`, member_id: 'mem-002', member_name: 'নাসির', status: 'Upcoming' },
+  { id: 'bsched-2', date: `${currentYear}-${currentMonth}-19`, member_id: 'mem-001', member_name: 'Saikat', status: 'Upcoming' },
   { id: 'bsched-3', date: `${currentYear}-${currentMonth}-20`, member_id: 'mem-003', member_name: 'Shakib', status: 'Upcoming' },
   { id: 'bsched-4', date: `${currentYear}-${currentMonth}-21`, member_id: 'mem-004', member_name: 'Nazir Hossain', status: 'Upcoming' }
 ];
