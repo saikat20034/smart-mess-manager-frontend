@@ -13,17 +13,20 @@ import {
   RefreshCw,
   User,
   Languages,
-  Calendar
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useMess } from '../context/MessContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useLiveClock } from '../hooks/useLiveClock';
 import { Badge } from './Badge';
 
 export const Navbar = ({ onToggleSidebar }) => {
   const { user, isManager, switchRole, logout, isDemoMode } = useAuth();
   const { selectedMonth, setSelectedMonth, mess, refreshData, resetAllDemoData } = useMess();
   const { lang, toggleLanguage, t, isBn } = useLanguage();
+  const { liveTimeStr, liveDateShort } = useLiveClock(isBn);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const location = useLocation();
@@ -120,6 +123,20 @@ export const Navbar = ({ onToggleSidebar }) => {
 
         {/* Right side: Language Switcher, Role, Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Real-time Live Clock & Date Badge */}
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/70 border border-slate-200/60 text-xs shadow-2xs">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <div className="flex items-center gap-1 font-mono font-bold text-slate-800 text-[11px]">
+              <Clock className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{liveTimeStr}</span>
+            </div>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-600 font-medium text-[11px]">{liveDateShort}</span>
+          </div>
+
           {/* Language Toggle (বাংলা / EN) */}
           <button
             onClick={toggleLanguage}

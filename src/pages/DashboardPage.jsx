@@ -18,11 +18,13 @@ import {
   CheckCircle2,
   Clock,
   Eye,
-  Edit2
+  Edit2,
+  ShoppingCart
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useLiveClock } from '../hooks/useLiveClock';
 import { formatBDT } from '../utils/calculations';
 import { MealRequestWidget } from '../components/MealRequestWidget';
 import { BazarRosterModal } from '../components/BazarRosterModal';
@@ -33,6 +35,7 @@ import { Modal } from '../components/Modal';
 export const DashboardPage = () => {
   const { user, isManager } = useAuth();
   const { t, isBn } = useLanguage();
+  const { liveTimeStr, liveDateFull } = useLiveClock(isBn);
   const {
     metrics,
     memberBalances,
@@ -134,6 +137,40 @@ export const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Real-time Live Date & Time Top Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 sm:px-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-inner">
+            <Calendar className="w-5 h-5 text-rose-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-rose-300 font-semibold uppercase tracking-wider">
+                {isBn ? 'লাইভ তারিখ ও সময়' : 'Live Real-time Clock'}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
+            </div>
+            <h1 className="text-sm sm:text-base font-bold text-white mt-0.5">
+              {liveDateFull}
+            </h1>
+          </div>
+        </div>
+
+        {/* Live Digital Clock Display */}
+        <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 self-start md:self-auto">
+          <Clock className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <span className="text-base sm:text-lg font-mono font-bold tracking-wider text-emerald-300">
+            {liveTimeStr}
+          </span>
+          <span className="text-[10px] font-medium text-slate-300 border-l border-white/15 pl-2">
+            {isBn ? 'বাংলাদেশ সময়' : 'BST (UTC+6)'}
+          </span>
+        </div>
+      </div>
+
       {/* Top Main Section (Left Mess Summary + Right Personal & Meal Request) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Mess Summary Card (Matching screenshot) */}
@@ -399,21 +436,35 @@ export const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Banner 2 */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-5 text-white flex items-center justify-between shadow-xs">
+        {/* Banner 2: Smart Bazar Shopping Checklist & Planner */}
+        <div className="bg-gradient-to-r from-teal-600 to-emerald-700 rounded-2xl p-5 text-white flex items-center justify-between shadow-xs">
           <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="px-2 py-0.5 bg-white/20 text-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                {isBn ? 'নতুন ফিচার' : 'New Feature'}
+              </span>
+              <span className="text-xs text-emerald-100 font-medium">
+                {isBn ? 'স্বচ্ছ ও সাশ্রয়ী মেস হিসাব' : '100% Transparent Mess'}
+              </span>
+            </div>
             <h4 className="text-base font-bold">
-              ২০১৯ থেকে হাজারো মেসের আস্থা
+              {isBn ? 'স্মার্ট বাজারের ফর্দ ও কেনাকাটা প্ল্যানার' : 'Smart Bazar Planner & Grocery Checklist'}
             </h4>
             <p className="text-xs text-emerald-100 mt-1">
-              স্বচ্ছ হিসাব ও ঝামেলাহীন মেস লাইফ
+              {isBn
+                ? 'বাজারের ফর্দ তৈরি করুন এবং এক ক্লিকেই মেস খরচে রূপান্তর করুন'
+                : 'Create your grocery shopping checklist & convert to mess expenses with 1 click'}
             </p>
-            <span className="mt-3 inline-block px-3 py-1 bg-white/20 text-white rounded-lg text-xs font-semibold">
-              100k+ on Google Play
-            </span>
+            <Link
+              to="/bazar-planner"
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            >
+              <span>{isBn ? 'বাজারের ফর্দ খুলুন' : 'Open Bazar Planner'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
           <div className="hidden sm:block text-emerald-200">
-            <Smartphone className="w-12 h-12 opacity-80" />
+            <ShoppingCart className="w-12 h-12 opacity-80" />
           </div>
         </div>
       </div>
