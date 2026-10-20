@@ -17,21 +17,21 @@ describe('Calculations Utility Tests', () => {
     expect(formatBDT(23.456)).toBe('৳ 23.46');
   });
 
-  it('calculates meal units with default weights (0.5, 1.0, 1.0)', () => {
+  it('calculates meal units with default weights (1.0, 1.0, 1.0)', () => {
     const entry = { breakfast: 1, lunch: 1, dinner: 1 };
-    expect(calculateMealUnits(entry, DEFAULT_CONFIG)).toBe(2.5);
+    expect(calculateMealUnits(entry, DEFAULT_CONFIG)).toBe(3.0);
 
     const halfBreakfast = { breakfast: 0.5, lunch: 0, dinner: 1 };
-    expect(calculateMealUnits(halfBreakfast, DEFAULT_CONFIG)).toBe(1.25);
+    expect(calculateMealUnits(halfBreakfast, DEFAULT_CONFIG)).toBe(1.5);
   });
 
   it('calculates total meal units correctly across entries', () => {
     const entries = [
-      { breakfast: 1, lunch: 1, dinner: 1 }, // 2.5
+      { breakfast: 1, lunch: 1, dinner: 1 }, // 3.0
       { breakfast: 0, lunch: 1, dinner: 1 }, // 2.0
-      { breakfast: 1, lunch: 0, dinner: 0 }  // 0.5
+      { breakfast: 1, lunch: 0, dinner: 0 }  // 1.0
     ];
-    expect(calculateTotalMealUnits(entries, DEFAULT_CONFIG)).toBe(5.0);
+    expect(calculateTotalMealUnits(entries, DEFAULT_CONFIG)).toBe(6.0);
   });
 
   it('calculates meal rate correctly and handles zero meals', () => {

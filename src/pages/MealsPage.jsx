@@ -316,7 +316,7 @@ export const MealsPage = () => {
               Meal Roster for {selectedDate}
             </h3>
             <p className="text-[11px] text-slate-500">
-              Weights: Breakfast = {mess?.breakfast_unit || 0.5} unit, Lunch = {mess?.lunch_unit || 1.0} unit, Dinner = {mess?.dinner_unit || 1.0} unit
+              Weights: Breakfast = {Number(mess?.breakfast_unit ?? 1.0)} unit, Lunch = {Number(mess?.lunch_unit ?? 1.0)} unit, Dinner = {Number(mess?.dinner_unit ?? 1.0)} unit
             </p>
           </div>
 

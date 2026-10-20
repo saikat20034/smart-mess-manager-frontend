@@ -26,7 +26,7 @@ export const INITIAL_MESS = {
   currency_symbol: '৳',
   invite_code: 'SAIKAT2026',
   month_start_day: 1,
-  breakfast_unit: 0.5,
+  breakfast_unit: 1.0,
   lunch_unit: 1.0,
   dinner_unit: 1.0,
   shared_expense_policy: 'equal',

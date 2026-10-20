@@ -82,7 +82,7 @@ export function createNewFreshMess({ messName, managerUser }) {
     currency_symbol: '৳',
     invite_code: inviteCode,
     month_start_day: 1,
-    breakfast_unit: 0.5,
+    breakfast_unit: 1.0,
     lunch_unit: 1.0,
     dinner_unit: 1.0,
     shared_expense_policy: 'equal',
@@ -136,7 +136,12 @@ export const dataService = {
       const { data, error } = await supabase.from('messes').select('*').limit(1).single();
       if (!error && data) return data;
     }
-    return getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
+    const mess = getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
+    if (mess && (mess.breakfast_unit === 0.5 || !mess.breakfast_unit)) {
+      mess.breakfast_unit = 1.0;
+      setLocalItem(STORAGE_KEYS.MESS, mess);
+    }
+    return mess;
   },
 
   async updateMess(updates) {

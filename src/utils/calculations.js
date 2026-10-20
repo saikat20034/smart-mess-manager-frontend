@@ -7,7 +7,7 @@
  */
 
 export const DEFAULT_CONFIG = {
-  breakfast_unit: 0.5,
+  breakfast_unit: 1.0,
   lunch_unit: 1.0,
   dinner_unit: 1.0,
   shared_expense_policy: 'equal' // 'equal' | 'per_meal'
@@ -29,9 +29,9 @@ export function formatBDT(amount) {
  * Calculate total meal units for a single meal record based on weights
  */
 export function calculateMealUnits(entry = {}, config = DEFAULT_CONFIG) {
-  const bWeight = Number(config.breakfast_unit ?? 0.5);
-  const lWeight = Number(config.lunch_unit ?? 1.0);
-  const dWeight = Number(config.dinner_unit ?? 1.0);
+  const bWeight = Number(config?.breakfast_unit ?? 1.0);
+  const lWeight = Number(config?.lunch_unit ?? 1.0);
+  const dWeight = Number(config?.dinner_unit ?? 1.0);
 
   const b = (Number(entry.breakfast) || 0) * bWeight;
   const l = (Number(entry.lunch) || 0) * lWeight;

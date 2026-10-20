@@ -180,9 +180,9 @@ export const MySummaryPage = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono">
                 {memberMeals.map((m) => {
-                  const bWeight = mess?.breakfast_unit || 0.5;
-                  const lWeight = mess?.lunch_unit || 1.0;
-                  const dWeight = mess?.dinner_unit || 1.0;
+                  const bWeight = Number(mess?.breakfast_unit ?? 1.0);
+                  const lWeight = Number(mess?.lunch_unit ?? 1.0);
+                  const dWeight = Number(mess?.dinner_unit ?? 1.0);
                   const dayUnits =
                     (Number(m.breakfast) || 0) * bWeight +
                     (Number(m.lunch) || 0) * lWeight +
@@ -195,7 +195,7 @@ export const MySummaryPage = () => {
                       <td className="py-2 px-2 text-center text-slate-600">{m.lunch}</td>
                       <td className="py-2 px-2 text-center text-slate-600">{m.dinner}</td>
                       <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                        {dayUnits.toFixed(1)}
+                        {dayUnits.toFixed(2)}
                       </td>
                     </tr>
                   );

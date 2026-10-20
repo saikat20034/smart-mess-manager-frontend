@@ -26,7 +26,7 @@ export const SettingsPage = () => {
     address: mess?.address || 'Room 402, Shahidullah Hall Extension, Curzon Hall, Dhaka',
     currency: mess?.currency || 'BDT',
     month_start_day: mess?.month_start_day || 1,
-    breakfast_unit: mess?.breakfast_unit || 0.5,
+    breakfast_unit: Number(mess?.breakfast_unit ?? 1.0),
     lunch_unit: mess?.lunch_unit || 1.0,
     dinner_unit: mess?.dinner_unit || 1.0,
     shared_expense_policy: mess?.shared_expense_policy || 'equal',

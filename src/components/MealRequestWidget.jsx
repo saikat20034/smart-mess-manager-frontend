@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 export const MealRequestWidget = () => {
   const { t, isBn } = useLanguage();
   const { user } = useAuth();
-  const { mealRequests, saveMealRequest, recordDailyMealsBulk } = useMess();
+  const { mess, mealRequests, saveMealRequest, recordDailyMealsBulk } = useMess();
 
   const [autoRequest, setAutoRequest] = useState(mealRequests.auto || false);
   const [morning, setMorning] = useState(mealRequests.morning || 0);
@@ -32,7 +32,8 @@ export const MealRequestWidget = () => {
     setDinner(mealRequests.dinner || 0);
   }, [mealRequests]);
 
-  const totalUnits = (morning * 0.5) + lunch + dinner;
+  const bWeight = Number(mess?.breakfast_unit ?? 1.0);
+  const totalUnits = (morning * bWeight) + lunch + dinner;
 
   const handleSave = async () => {
     await saveMealRequest({
@@ -102,11 +103,11 @@ export const MealRequestWidget = () => {
         {/* Morning / সকাল */}
         <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100 text-center">
           <span className="text-[10px] text-slate-400 font-medium block">
-            {t('morning')} (0.5)
+            {t('morning')} ({bWeight.toFixed(1)})
           </span>
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <button
-              onClick={() => setMorning(Math.max(0, morning - 0.5))}
+              onClick={() => setMorning(Math.max(0, Math.round((morning - 1) * 100) / 100))}
               className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
             >
               -
@@ -115,7 +116,7 @@ export const MealRequestWidget = () => {
               {morning.toFixed(1)}
             </span>
             <button
-              onClick={() => setMorning(morning + 0.5)}
+              onClick={() => setMorning(Math.round((morning + 1) * 100) / 100)}
               className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
             >
               +
