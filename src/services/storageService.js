@@ -5,6 +5,7 @@ import {
   INITIAL_EXPENSES,
   INITIAL_DEPOSITS,
   INITIAL_MEALS,
+  INITIAL_SETTLEMENTS,
   INITIAL_BAZAR_LIST,
   INITIAL_BAZAR_SCHEDULE,
   INITIAL_ACTIVITIES
@@ -51,7 +52,7 @@ export function initLocalStorageIfEmpty() {
     setLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
     setLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
     setLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
-    setLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
+    setLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
     setLocalItem(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
     setLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
     setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
@@ -316,7 +317,29 @@ export const dataService = {
 
   // Settlements
   async getSettlements() {
-    return getLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
+    return getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
+  },
+
+  async getAvailableMonths() {
+    const meals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
+    const expenses = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
+    const deposits = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
+    const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
+
+    const monthSet = new Set();
+    meals.forEach((m) => m.date && monthSet.add(m.date.slice(0, 7)));
+    expenses.forEach((e) => e.date && monthSet.add(e.date.slice(0, 7)));
+    deposits.forEach((d) => d.date && monthSet.add(d.date.slice(0, 7)));
+    settlements.forEach((s) => {
+      if (s.monthYear) monthSet.add(s.monthYear);
+      else if (s.year && s.month) monthSet.add(`${s.year}-${String(s.month).padStart(2, '0')}`);
+    });
+
+    const now = new Date();
+    const currStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    monthSet.add(currStr);
+
+    return Array.from(monthSet).sort().reverse();
   },
 
   async finalizeSettlement(settlementData) {

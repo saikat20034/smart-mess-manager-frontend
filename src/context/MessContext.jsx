@@ -7,8 +7,11 @@ const MessContext = createContext(null);
 export const MessProvider = ({ children }) => {
   const now = new Date();
   const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthYear = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
 
   const [selectedMonth, setSelectedMonth] = useState(currentMonthYear);
+  const [availableMonths, setAvailableMonths] = useState([currentMonthYear, previousMonthYear]);
   const [mess, setMess] = useState(null);
   const [members, setMembers] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -37,7 +40,8 @@ export const MessProvider = ({ children }) => {
         activitiesData,
         bazarListData,
         bazarSchedData,
-        mealReqData
+        mealReqData,
+        monthsData
       ] = await Promise.all([
         dataService.getMess(),
         dataService.getMembers(),
@@ -49,7 +53,8 @@ export const MessProvider = ({ children }) => {
         dataService.getActivityLogs(),
         dataService.getBazarList(),
         dataService.getBazarSchedule(),
-        dataService.getMealRequests()
+        dataService.getMealRequests(),
+        dataService.getAvailableMonths()
       ]);
 
       setMess(messData);
@@ -63,6 +68,9 @@ export const MessProvider = ({ children }) => {
       setBazarList(bazarListData);
       setBazarSchedule(bazarSchedData);
       setMealRequests(mealReqData);
+      if (monthsData && monthsData.length) {
+        setAvailableMonths(monthsData);
+      }
     } catch (err) {
       console.error('Error refreshing mess data:', err);
     } finally {
@@ -211,11 +219,57 @@ export const MessProvider = ({ children }) => {
     refreshData();
   };
 
+  const isCurrentMonth = selectedMonth === currentMonthYear;
+  const isPreviousMonth = selectedMonth === previousMonthYear;
+
+  const switchToPreviousMonth = () => {
+    setSelectedMonth(previousMonthYear);
+  };
+
+  const switchToCurrentMonth = () => {
+    setSelectedMonth(currentMonthYear);
+  };
+
+  const switchToMonth = (monthStr) => {
+    if (monthStr) setSelectedMonth(monthStr);
+  };
+
+  const formatMonthName = (monthStr, isBn = true) => {
+    if (!monthStr) return '';
+    const parts = monthStr.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const bnMonths = [
+      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+    ];
+    const enMonths = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const toBnDigits = (num) => String(num).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+
+    const mIdx = m - 1;
+    if (isBn) {
+      return `${bnMonths[mIdx] || ''} ${toBnDigits(y)}`;
+    }
+    return `${enMonths[mIdx] || ''} ${y}`;
+  };
+
   return (
     <MessContext.Provider
       value={{
         selectedMonth,
         setSelectedMonth,
+        currentMonthYear,
+        previousMonthYear,
+        isCurrentMonth,
+        isPreviousMonth,
+        switchToPreviousMonth,
+        switchToCurrentMonth,
+        switchToMonth,
+        availableMonths,
+        formatMonthName,
         mess,
         members,
         categories,

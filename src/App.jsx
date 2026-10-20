@@ -21,6 +21,8 @@ import { MySummaryPage } from './pages/MySummaryPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { BazarPlannerPage } from './pages/BazarPlannerPage';
+import { PreviousMonthPage } from './pages/PreviousMonthPage';
+import { AllMonthsPage } from './pages/AllMonthsPage';
 import { NotFoundPage, UnauthorizedPage } from './pages/NotFoundPage';
 
 // Protected Route Guard
@@ -64,6 +66,8 @@ export function App() {
                 <Route path="/activity" element={<ActivityPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/bazar-planner" element={<BazarPlannerPage />} />
+                <Route path="/previous-month" element={<PreviousMonthPage />} />
+                <Route path="/all-months" element={<AllMonthsPage />} />
               </Route>
 
               {/* Error Pages */}

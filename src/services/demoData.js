@@ -7,6 +7,16 @@ const now = new Date();
 const currentYear = now.getFullYear();
 const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
 
+const prevDateObj = new Date(currentYear, now.getMonth() - 1, 1);
+export const prevYear = prevDateObj.getFullYear();
+export const prevMonth = String(prevDateObj.getMonth() + 1).padStart(2, '0');
+export const prevMonthStr = `${prevYear}-${prevMonth}`;
+
+const olderDateObj = new Date(currentYear, now.getMonth() - 2, 1);
+export const olderYear = olderDateObj.getFullYear();
+export const olderMonth = String(olderDateObj.getMonth() + 1).padStart(2, '0');
+export const olderMonthStr = `${olderYear}-${olderMonth}`;
+
 export const INITIAL_MESS = {
   id: 'mess-001',
   name: 'আপাতত নাম নাই, ...',
@@ -190,6 +200,67 @@ export const INITIAL_EXPENSES = [
     paid_by_name: 'Md Asadul',
     is_meal_related: false,
     notes: 'যৌথ বিল'
+  },
+  // Previous Month Sample Expenses (September 2026 - Meal expenses: ৳ 8,280, Shared: ৳ 2,450)
+  {
+    id: 'exp-prev-01',
+    title: 'মিনিকেট চাল (৫০ কেজি) ও সরিষার তেল',
+    amount: 3950,
+    category_id: 'cat-03',
+    category_name: 'Rice & Spices',
+    date: `${prevYear}-${prevMonth}-02`,
+    paid_by_member_id: 'mem-001',
+    paid_by_name: 'Saikat',
+    is_meal_related: true,
+    notes: 'সেপ্টেম্বর পাইকারি চাল ও তেল'
+  },
+  {
+    id: 'exp-prev-02',
+    title: 'দেশি মুরগি (৬ কেজি) ও ডিম (৪ ডজন)',
+    amount: 2330,
+    category_id: 'cat-02',
+    category_name: 'Meat, Fish & Eggs',
+    date: `${prevYear}-${prevMonth}-10`,
+    paid_by_member_id: 'mem-002',
+    paid_by_name: 'নাসির',
+    is_meal_related: true,
+    notes: 'আনন্দ বাজার'
+  },
+  {
+    id: 'exp-prev-03',
+    title: 'কাতল মাছ ও কাঁচাবাজার',
+    amount: 2000,
+    category_id: 'cat-01',
+    category_name: 'Groceries & Bazar',
+    date: `${prevYear}-${prevMonth}-18`,
+    paid_by_member_id: 'mem-003',
+    paid_by_name: 'Shakib',
+    is_meal_related: true,
+    notes: 'পলাশী বাজার'
+  },
+  {
+    id: 'exp-prev-04',
+    title: 'রান্নার খালা মাসিক বেতন (সেপ্টেম্বর)',
+    amount: 1750,
+    category_id: 'cat-04',
+    category_name: 'Cook (Khala) Salary',
+    date: `${prevYear}-${prevMonth}-05`,
+    paid_by_member_id: 'mem-001',
+    paid_by_name: 'Saikat',
+    is_meal_related: false,
+    notes: 'খালার বেতন'
+  },
+  {
+    id: 'exp-prev-05',
+    title: 'ওয়াইফাই ও গ্যাস বিল',
+    amount: 700,
+    category_id: 'cat-06',
+    category_name: 'High-Speed WiFi',
+    date: `${prevYear}-${prevMonth}-07`,
+    paid_by_member_id: 'mem-005',
+    paid_by_name: 'Md Asadul',
+    is_meal_related: false,
+    notes: 'যৌথ বিল'
   }
 ];
 
@@ -264,6 +335,67 @@ export const INITIAL_DEPOSITS = [
     payment_method: 'Nagad',
     transaction_ref: 'NGD8827361',
     notes: 'নগদ ডিপোজিট'
+  },
+  // Previous Month Deposits (September 2026 - Total: ৳ 10,750)
+  {
+    id: 'dep-prev-01',
+    member_id: 'mem-001',
+    member_name: 'Saikat',
+    amount: 1540,
+    date: `${prevYear}-${prevMonth}-01`,
+    payment_method: 'Cash',
+    transaction_ref: 'CASH-SEP-01',
+    notes: 'সেপ্টেম্বর জমা'
+  },
+  {
+    id: 'dep-prev-02',
+    member_id: 'mem-002',
+    member_name: 'নাসির',
+    amount: 1910,
+    date: `${prevYear}-${prevMonth}-02`,
+    payment_method: 'bKash',
+    transaction_ref: 'BKASH-SEP-02',
+    notes: 'বিকাশ পেমেন্ট'
+  },
+  {
+    id: 'dep-prev-03',
+    member_id: 'mem-003',
+    member_name: 'Shakib',
+    amount: 1530,
+    date: `${prevYear}-${prevMonth}-02`,
+    payment_method: 'Nagad',
+    transaction_ref: 'NGD-SEP-03',
+    notes: 'নগদ জমা'
+  },
+  {
+    id: 'dep-prev-04',
+    member_id: 'mem-004',
+    member_name: 'Nazir Hossain',
+    amount: 2280,
+    date: `${prevYear}-${prevMonth}-03`,
+    payment_method: 'bKash',
+    transaction_ref: 'BKASH-SEP-04',
+    notes: 'বিকাশ ডিপোজিট'
+  },
+  {
+    id: 'dep-prev-05',
+    member_id: 'mem-005',
+    member_name: 'Md Asadul',
+    amount: 2050,
+    date: `${prevYear}-${prevMonth}-04`,
+    payment_method: 'bKash',
+    transaction_ref: 'BKASH-SEP-05',
+    notes: 'বিকাশ জমা'
+  },
+  {
+    id: 'dep-prev-06',
+    member_id: 'mem-007',
+    member_name: 'Rakibul Hasan',
+    amount: 1440,
+    date: `${prevYear}-${prevMonth}-05`,
+    payment_method: 'Nagad',
+    transaction_ref: 'NGD-SEP-06',
+    notes: 'নগদ ডিপোজিট'
   }
 ];
 
@@ -312,10 +444,81 @@ export function generateInitialMeals() {
     });
   }
 
+  // Generate previous month meals (Total: 184.0 meals for September)
+  const prevMonthMealTarget = {
+    'mem-001': 26.0,
+    'mem-002': 34.0,
+    'mem-003': 27.0,
+    'mem-004': 35.0,
+    'mem-005': 31.0,
+    'mem-006': 0.0,
+    'mem-007': 31.0
+  };
+
+  for (let d = 1; d <= 20; d++) {
+    const dayStr = String(d).padStart(2, '0');
+    const date = `${prevYear}-${prevMonth}-${dayStr}`;
+
+    Object.keys(prevMonthMealTarget).forEach((memberId) => {
+      if (memberId === 'mem-006') return;
+      meals.push({
+        id: `meal-${date}-${memberId}`,
+        member_id: memberId,
+        date,
+        breakfast: 0.5,
+        lunch: 0.5,
+        dinner: 0.5,
+        notes: ''
+      });
+    });
+  }
+
   return meals;
 }
 
 export const INITIAL_MEALS = generateInitialMeals();
+
+// Historical Finalized Settlements
+export const INITIAL_SETTLEMENTS = [
+  {
+    id: 'set-prev-01',
+    month: parseInt(prevMonth, 10),
+    year: prevYear,
+    monthYear: prevMonthStr,
+    totalMealUnits: 184.0,
+    mealExpenses: 8280.0,
+    sharedExpenses: 2450.0,
+    totalExpenses: 10730.0,
+    mealRate: 45.0,
+    totalDeposits: 10750.0,
+    cashInHand: 20.0,
+    outstandingDues: 320.0,
+    totalCredits: 340.0,
+    is_finalized: true,
+    finalized_by_name: 'Saikat (Manager)',
+    finalized_at: `${prevYear}-${prevMonth}-30T23:59:59.000Z`,
+    notes: 'সেপ্টেম্বর ২০২৬ এর চূড়ান্ত মাসিক হিসাব সম্পন্ন'
+  },
+  {
+    id: 'set-older-02',
+    month: parseInt(olderMonth, 10),
+    year: olderYear,
+    monthYear: olderMonthStr,
+    totalMealUnits: 190.0,
+    mealExpenses: 8930.0,
+    sharedExpenses: 2500.0,
+    totalExpenses: 11430.0,
+    mealRate: 47.0,
+    totalDeposits: 11450.0,
+    cashInHand: 20.0,
+    outstandingDues: 290.0,
+    totalCredits: 310.0,
+    is_finalized: true,
+    finalized_by_name: 'Saikat (Manager)',
+    finalized_at: `${olderYear}-${olderMonth}-31T23:59:59.000Z`,
+    notes: 'আগস্ট ২০২৬ এর চূড়ান্ত মাসিক হিসাব সম্পন্ন'
+  }
+];
 
 // Bazar Shopping List / Checklist Items (বাজারের ফর্দ)
 export const INITIAL_BAZAR_LIST = [

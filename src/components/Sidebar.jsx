@@ -6,15 +6,25 @@ import {
   UtensilsCrossed,
   ShoppingCart,
   CheckSquare,
+  History,
+  CalendarDays,
   LogOut,
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useMess } from '../context/MessContext';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, logout } = useAuth();
   const { t, isBn } = useLanguage();
+  const {
+    selectedMonth,
+    isCurrentMonth,
+    switchToPreviousMonth,
+    switchToCurrentMonth,
+    formatMonthName
+  } = useMess();
   const navigate = useNavigate();
 
   const navItems = [
@@ -22,7 +32,9 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { path: '/settlement', label: t('calcRoom'), icon: Calculator },
     { path: '/meals', label: isManager ? t('addMeal') : (isBn ? 'মিল তালিকা' : 'Meals List'), icon: UtensilsCrossed },
     { path: '/expenses', label: isManager ? t('addExpense') : (isBn ? 'খরচের তালিকা' : 'Expenses List'), icon: ShoppingCart },
-    { path: '/bazar-planner', label: t('bazarRoster'), icon: CheckSquare }
+    { path: '/bazar-planner', label: t('bazarRoster'), icon: CheckSquare },
+    { path: '/previous-month', label: t('previousMonth'), icon: History },
+    { path: '/all-months', label: t('allMonths'), icon: CalendarDays }
   ];
 
   const handleLogout = () => {
@@ -65,6 +77,49 @@ export const Sidebar = ({ isOpen, onClose }) => {
             </NavLink>
           );
         })}
+
+        {/* Active Month Indicator & Quick Switcher */}
+        <div className="pt-2 pb-1 border-t border-slate-100 my-1">
+          <div className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs">
+            <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
+              <span>{isBn ? 'সক্রিয় মাস' : 'Active Month'}</span>
+              <span className={`px-1.5 py-0.5 rounded-full font-bold ${isCurrentMonth ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                {isCurrentMonth ? (isBn ? 'চলতি' : 'Current') : (isBn ? 'বিগত' : 'Past')}
+              </span>
+            </div>
+            <p className="font-bold text-slate-900 text-xs truncate">
+              {formatMonthName(selectedMonth, isBn)}
+            </p>
+            <div className="mt-2 pt-2 border-t border-slate-200/60">
+              {isCurrentMonth ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchToPreviousMonth();
+                    navigate('/previous-month');
+                    onClose && onClose();
+                  }}
+                  className="w-full text-center py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700 cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+                >
+                  <History className="w-3 h-3 text-slate-500" />
+                  <span>{t('previousMonth')}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchToCurrentMonth();
+                    navigate('/dashboard');
+                    onClose && onClose();
+                  }}
+                  className="w-full text-center py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+                >
+                  <span>✓ {t('returnToCurrentMonth')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </nav>
 
       {/* Bottom User Profile Section (Matching screenshot: Avatar, "Manager", Logout icon) */}
