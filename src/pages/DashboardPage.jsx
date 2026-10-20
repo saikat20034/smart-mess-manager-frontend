@@ -366,7 +366,7 @@ export const DashboardPage = () => {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold font-mono text-slate-900">
-                    {currentMember?.mealUnits?.toFixed(2) || '23.00'}
+                    {Number(currentMember?.mealUnits ?? 0).toFixed(2)}
                   </h4>
                   <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
                     {t('myTotalMeals')}
@@ -381,7 +381,7 @@ export const DashboardPage = () => {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold font-mono text-slate-900">
-                    {currentMember?.totalDeposits?.toFixed(2) || '1597.13'} <span className="text-xs">৳</span>
+                    {Number(currentMember?.totalDeposits ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
                   <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
                     {t('myTotalDeposits')}
@@ -396,7 +396,7 @@ export const DashboardPage = () => {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold font-mono text-slate-900">
-                    {currentMember?.totalCost?.toFixed(2) || '1612.98'} <span className="text-xs">৳</span>
+                    {Number(currentMember?.totalCost ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
                   <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
                     {t('myTotalExpenses')}
@@ -412,10 +412,10 @@ export const DashboardPage = () => {
                 <div>
                   <h4
                     className={`text-xl font-bold font-mono ${
-                      currentMember?.netBalance >= 0 ? 'text-emerald-700' : 'text-slate-900'
+                      Number(currentMember?.netBalance ?? 0) >= 0 ? 'text-emerald-700' : 'text-slate-900'
                     }`}
                   >
-                    {currentMember?.netBalance?.toFixed(2) || '-15.85'} <span className="text-xs">৳</span>
+                    {Number(currentMember?.netBalance ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
                   <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
                     {t('myBalance')}

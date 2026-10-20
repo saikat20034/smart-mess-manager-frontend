@@ -12,7 +12,7 @@ import {
 } from './demoData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   MESS: 'smm_mess_data_v2',
   MEMBERS: 'smm_members_v2',
   CATEGORIES: 'smm_categories_v2',
@@ -23,46 +23,165 @@ const STORAGE_KEYS = {
   ACTIVITIES: 'smm_activities_v2',
   BAZAR_LIST: 'smm_bazar_list_v2',
   BAZAR_SCHEDULE: 'smm_bazar_schedule_v2',
-  MEAL_REQUESTS: 'smm_meal_requests_v2'
+  MEAL_REQUESTS: 'smm_meal_requests_v2',
+  CLEAN_DATABASE_FLAG: 'smm_clean_database_v2'
 };
+
+function getCleanFallback(key, fallback) {
+  if (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) === 'true') {
+    if (key === STORAGE_KEYS.MESS) {
+      return {
+        id: 'mess-clean',
+        name: 'আমাদের মেস',
+        subtitle: 'চলতি মাসের হিসাব',
+        address: 'ঢাকা, বাংলাদেশ',
+        currency: 'BDT',
+        currency_symbol: '৳',
+        invite_code: 'MESS2026',
+        month_start_day: 1,
+        breakfast_unit: 1.0,
+        lunch_unit: 1.0,
+        dinner_unit: 1.0,
+        shared_expense_policy: 'equal',
+        status: 'Running',
+        is_clean: true
+      };
+    }
+    if (key === STORAGE_KEYS.MEMBERS) {
+      return [];
+    }
+    if (key === STORAGE_KEYS.MEAL_REQUESTS) {
+      return { auto: false, morning: 0, lunch: 0, dinner: 0 };
+    }
+    return [];
+  }
+  return fallback;
+}
 
 function getLocalItem(key, fallback) {
   try {
+    if (typeof localStorage === 'undefined') return getCleanFallback(key, fallback);
     const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : fallback;
+    if (val !== null && val !== undefined) {
+      return JSON.parse(val);
+    }
+    return getCleanFallback(key, fallback);
   } catch (e) {
     console.error(`Error reading ${key}:`, e);
-    return fallback;
+    return getCleanFallback(key, fallback);
   }
 }
 
 function setLocalItem(key, data) {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
     console.error(`Error writing ${key}:`, e);
   }
 }
 
-export function initLocalStorageIfEmpty() {
-  if (!localStorage.getItem(STORAGE_KEYS.MESS)) {
-    setLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
-    setLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
-    setLocalItem(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-    setLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
-    setLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
-    setLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
-    setLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
-    setLocalItem(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
-    setLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
-    setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
+export function cleanDatabase(managerUser) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG, 'true');
+    }
+
+    const currentMess = getLocalItem(STORAGE_KEYS.MESS, null);
+    const existingName = (currentMess?.name && currentMess.name !== 'আপাতত নাম নাই, ...')
+      ? currentMess.name
+      : 'আমাদের মেস';
+
+    const cleanMess = {
+      id: currentMess?.id || `mess-${Date.now()}`,
+      name: existingName,
+      subtitle: 'চলতি মাসের হিসাব',
+      address: currentMess?.address || 'ঢাকা, বাংলাদেশ',
+      currency: 'BDT',
+      currency_symbol: '৳',
+      invite_code: currentMess?.invite_code || 'MESS2026',
+      month_start_day: 1,
+      breakfast_unit: 1.0,
+      lunch_unit: 1.0,
+      dinner_unit: 1.0,
+      shared_expense_policy: 'equal',
+      status: 'Running',
+      is_clean: true
+    };
+
+    let activeManager = managerUser;
+    if (!activeManager) {
+      try {
+        const savedAuth = localStorage.getItem('smm_auth_user_v2');
+        if (savedAuth) {
+          activeManager = JSON.parse(savedAuth);
+        }
+      } catch (e) {
+        // fallback
+      }
+    }
+
+    if (!activeManager) {
+      activeManager = {
+        id: 'mem-001',
+        name: 'Saikat',
+        email: 'saikat@mess.ac.bd',
+        phone: '01711223344',
+        role: 'manager',
+        status: 'active',
+        joined_at: new Date().toISOString().split('T')[0],
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+      };
+    } else {
+      activeManager = {
+        ...activeManager,
+        role: 'manager',
+        status: 'active',
+        joined_at: new Date().toISOString().split('T')[0]
+      };
+    }
+
+    setLocalItem(STORAGE_KEYS.MESS, cleanMess);
+    setLocalItem(STORAGE_KEYS.MEMBERS, [activeManager]);
+    setLocalItem(STORAGE_KEYS.EXPENSES, []);
+    setLocalItem(STORAGE_KEYS.DEPOSITS, []);
+    setLocalItem(STORAGE_KEYS.MEALS, []);
+    setLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
+    setLocalItem(STORAGE_KEYS.BAZAR_LIST, []);
+    setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, []);
+    setLocalItem(STORAGE_KEYS.ACTIVITIES, [
+      {
+        id: `act-${Date.now()}`,
+        action: 'CLEAN_DATABASE',
+        title: 'ডাটাবেস সম্পূর্ণ খালি করা হয়েছে',
+        details: 'সকল ডেমো মিল, খরচ ও জমার হিসাব মুছে ফেলা হয়েছে। মেস এখন ফ্রেশ ও নতুন হিসাবের জন্য প্রস্তুত।',
+        timestamp: new Date().toISOString()
+      }
+    ]);
     setLocalItem(STORAGE_KEYS.MEAL_REQUESTS, { auto: false, morning: 0, lunch: 0, dinner: 0 });
+
+    return { mess: cleanMess, members: [activeManager] };
+  } catch (err) {
+    console.error('Error cleaning database:', err);
+    return null;
   }
 }
 
+export function initLocalStorageIfEmpty() {
+  if (typeof localStorage === 'undefined') return;
+  if (localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) === 'true') {
+    if (!localStorage.getItem(STORAGE_KEYS.MESS)) {
+      cleanDatabase();
+    }
+    return;
+  }
+
+  // Automatically initialize database clean as requested
+  cleanDatabase();
+}
+
 export function resetDemoData() {
-  Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
-  initLocalStorageIfEmpty();
+  cleanDatabase();
 }
 
 export function createNewFreshMess({ messName, managerUser }) {
@@ -126,7 +245,12 @@ export function createNewFreshMess({ messName, managerUser }) {
   return freshMess;
 }
 
-// Auto-run init
+// Auto-run init & clean database check
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  if (localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) !== 'true') {
+    cleanDatabase();
+  }
+}
 initLocalStorageIfEmpty();
 
 export const dataService = {

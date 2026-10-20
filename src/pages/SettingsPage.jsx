@@ -13,7 +13,8 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  Trash2
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,9 +25,11 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
-  const { mess, updateMessSettings, resetAllDemoData } = useMess();
+  const { mess, updateMessSettings, cleanDatabase } = useMess();
   const { theme, setTheme } = useTheme();
   const { isBn } = useLanguage();
+
+  const [cleanDbSuccess, setCleanDbSuccess] = useState(false);
 
   const [form, setForm] = useState({
     name: mess?.name || 'Padma Hall Mess (Dhaka University)',
@@ -349,34 +352,59 @@ export const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Demo Data Reset (For Testing) */}
-        <div className="bg-rose-50/50 rounded-2xl border border-rose-200/80 p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Clean Database (Delete All Demo Data) */}
+        <div className="bg-rose-50/50 dark:bg-rose-950/20 rounded-2xl border border-rose-200/80 dark:border-rose-900/60 p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h4 className="text-sm font-bold text-rose-900">Reset Demo Data</h4>
-            <p className="text-xs text-rose-700 mt-0.5">
-              Reset all local sample data back to the clean Bangladeshi university demo state.
+            <div className="flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <h4 className="text-sm font-bold text-rose-900 dark:text-rose-200">
+                {isBn ? 'ডাটাবেস সম্পূর্ণ খালি করুন (Clean Database)' : 'Clean Database (Delete All Demo Data)'}
+              </h4>
+            </div>
+            <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">
+              {isBn
+                ? 'মেসের সকল ডেমো ডাটা, মিল হিসাব, বাজার খরচ, জমা ও পূর্ববর্তী মাসের রেকর্ড স্থায়ীভাবে মুছে ফেলা হবে। মেস ফ্রেশ ও পরিষ্কার অবস্থায় আসবে।'
+                : 'Permanently delete all sample demo meals, expenses, deposits, and settlement records. Resets the database to a completely clean slate.'}
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setResetConfirmOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset Demo Store</span>
+            <Trash2 className="w-4 h-4" />
+            <span>{isBn ? 'সকল ডেমো ডাটা মুছুন' : 'Delete All Demo Data'}</span>
           </button>
         </div>
       </form>
 
-      {/* Reset Confirmation */}
+      {/* Clean Database Success Toast */}
+      {cleanDbSuccess && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 bg-emerald-600 text-white rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <Check className="w-4 h-4" />
+          <span>{isBn ? 'ডাটাবেস সফলভাবে খালি ও পরিষ্কার করা হয়েছে!' : 'Database successfully cleaned!'}</span>
+        </div>
+      )}
+
+      {/* Clean Database Confirmation Dialog */}
       <ConfirmDialog
         isOpen={resetConfirmOpen}
         onClose={() => setResetConfirmOpen(false)}
-        onConfirm={resetAllDemoData}
-        title="Reset All Demo Data?"
-        message="This will re-initialize the sample Bangladeshi mess records (Padma Hall Mess, 5 members, meals, and bazar expenses). Use this whenever you want to test from scratch."
-        confirmText="Confirm Reset"
+        onConfirm={async () => {
+          await cleanDatabase();
+          setResetConfirmOpen(false);
+          setCleanDbSuccess(true);
+          setTimeout(() => setCleanDbSuccess(false), 4000);
+        }}
+        title={isBn ? 'সকল ডেমো ডাটা মুছে ডাটাবেস খালি করবেন?' : 'Delete All Demo Data & Clean Database?'}
+        message={
+          isBn
+            ? 'আপনি কি নিশ্চিত যে আপনি সকল ডেমো মিল, বাজার খরচ, জমা ও অতীত মাসের রেকর্ড মুছে ডাটাবেস সম্পূর্ণ খালি করতে চান? এই কাজ ফিরিয়ে নেওয়া সম্ভব নয়।'
+            : 'Are you sure you want to permanently delete all sample demo meals, expenses, deposits, and history? This will reset all numbers to zero.'
+        }
+        confirmText={isBn ? 'হ্যাঁ, ডাটাবেস খালি করুন' : 'Yes, Clean Database'}
+        cancelText={isBn ? 'বাতিল' : 'Cancel'}
         isDestructive={true}
       />
     </div>

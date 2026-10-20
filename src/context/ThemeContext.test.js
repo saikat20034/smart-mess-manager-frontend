@@ -45,3 +45,4 @@ describe('Theme Mode Logic', () => {
     expect(validThemes.includes('unknown')).toBe(false);
   });
 });
+

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { dataService, resetDemoData, createNewFreshMess } from '../services/storageService';
+import { dataService, resetDemoData, createNewFreshMess, cleanDatabase } from '../services/storageService';
 import { calculateMemberBalances } from '../utils/calculations';
 
 const MessContext = createContext(null);
@@ -214,9 +214,14 @@ export const MessProvider = ({ children }) => {
     return fresh;
   };
 
+  const clearDatabase = async (managerUser) => {
+    cleanDatabase(managerUser);
+    setSelectedMonth(currentMonthYear);
+    await refreshData();
+  };
+
   const resetAllDemoData = () => {
-    resetDemoData();
-    refreshData();
+    clearDatabase();
   };
 
   const isCurrentMonth = selectedMonth === currentMonthYear;
@@ -314,6 +319,7 @@ export const MessProvider = ({ children }) => {
         saveMealRequest,
         createNewMess,
         resetAllDemoData,
+        cleanDatabase: clearDatabase,
         deleteMonth
       }}
     >
