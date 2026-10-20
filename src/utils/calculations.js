@@ -161,7 +161,10 @@ export function calculateMemberBalances({
   // 7. Assemble per-member items
   const memberSummaries = members.map(member => {
     const units = Math.round(((memberUnitsMap[member.id] || 0) + Number.EPSILON) * 100) / 100;
-    const mealCost = Math.round(((units * mealRate) + Number.EPSILON) * 100) / 100;
+    const rawMealCost = totalMealUnits > 0
+      ? (units / totalMealUnits) * mealExpenses
+      : 0;
+    const mealCost = Math.round((rawMealCost + Number.EPSILON) * 100) / 100;
     const sharedCost = member.status === 'inactive' ? 0 : sharedCostPerMember;
     const totalCost = Math.round(((mealCost + sharedCost) + Number.EPSILON) * 100) / 100;
     const totalDeposits = Math.round(((depositsMap[member.id] || 0) + Number.EPSILON) * 100) / 100;

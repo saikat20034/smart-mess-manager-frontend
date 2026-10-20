@@ -128,4 +128,19 @@ describe('Calculations Utility Tests', () => {
     expect(result.summary.outstandingDues).toBe(500);
     expect(result.summary.totalCredits).toBe(700);
   });
+
+  it('prevents floating-point rounding drift (e.g. 2.75 meals with 1300 expense equals exact 1300.00, not 1300.01)', () => {
+    const members = [{ id: 'm1', name: 'Mazharul Islam', status: 'active' }];
+    const meals = [{ member_id: 'm1', breakfast: 0.75, lunch: 1.0, dinner: 1.0 }]; // 2.75 meals
+    const expenses = [{ amount: 1300, is_meal_related: true }];
+    const deposits = [{ member_id: 'm1', amount: 1500 }];
+
+    const result = calculateMemberBalances({ members, meals, expenses, deposits });
+    const mazharul = result.members[0];
+
+    expect(mazharul.mealCost).toBe(1300.00);
+    expect(mazharul.totalCost).toBe(1300.00);
+    expect(mazharul.netBalance).toBe(200.00);
+    expect(result.summary.cashInHand).toBe(200.00);
+  });
 });

@@ -130,7 +130,7 @@ export const MySummaryPage = () => {
               {formatBDT(activeSummary.mealCost)}
             </h4>
             <span className="text-[11px] text-slate-400 mt-0.5 block">
-              {activeSummary.mealUnits.toFixed(1)} × {formatBDT(metrics.mealRate)}
+              {activeSummary.mealUnits.toFixed(2)} × {formatBDT(metrics.mealRate)}
             </span>
           </div>
 
