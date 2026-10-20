@@ -14,14 +14,14 @@ import { useLanguage } from '../context/LanguageContext';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, isBn } = useLanguage();
   const navigate = useNavigate();
 
   const navItems = [
     { path: '/dashboard', label: t('homePage'), icon: LayoutDashboard },
     { path: '/settlement', label: t('calcRoom'), icon: Calculator },
-    { path: '/meals', label: t('addMeal'), icon: UtensilsCrossed },
-    { path: '/expenses', label: t('addExpense'), icon: ShoppingCart },
+    { path: '/meals', label: isManager ? t('addMeal') : (isBn ? 'মিল তালিকা' : 'Meals List'), icon: UtensilsCrossed },
+    { path: '/expenses', label: isManager ? t('addExpense') : (isBn ? 'খরচের তালিকা' : 'Expenses List'), icon: ShoppingCart },
     { path: '/bazar-planner', label: t('bazarRoster'), icon: CheckSquare }
   ];
 

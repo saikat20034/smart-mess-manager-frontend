@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Calendar, UserCheck, Plus, Check } from 'lucide-react';
+import { ShoppingCart, Calendar, UserCheck, Plus, Check, Lock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
+import { useAuth } from '../context/AuthContext';
 import { Modal } from './Modal';
 import { Badge } from './Badge';
 
 export const BazarRosterModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  const { isManager } = useAuth();
   const { members, bazarSchedule, addBazarScheduleEntry } = useMess();
 
   const [selectedMemberId, setSelectedMemberId] = useState(members[0]?.id || '');
@@ -82,60 +84,76 @@ export const BazarRosterModal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Add Duty Form */}
-        <form onSubmit={handleSubmit} className="border-t border-slate-100 pt-4 space-y-3">
-          <h4 className="text-xs font-bold text-slate-900">নতুন দায়িত্ব যুক্ত করুন</h4>
+        {/* Add Duty Form (Manager Only) */}
+        {isManager ? (
+          <form onSubmit={handleSubmit} className="border-t border-slate-100 pt-4 space-y-3">
+            <h4 className="text-xs font-bold text-slate-900">নতুন দায়িত্ব যুক্ত করুন</h4>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">তারিখ</label>
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-emerald-500 focus:outline-none"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">তারিখ</label>
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">মেম্বার</label>
+                <select
+                  value={selectedMemberId}
+                  onChange={(e) => setSelectedMemberId(e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white focus:border-emerald-500 focus:outline-none"
+                >
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">মেম্বার</label>
-              <select
-                value={selectedMemberId}
-                onChange={(e) => setSelectedMemberId(e.target.value)}
-                className="w-full text-xs p-2 border border-slate-200 rounded-lg bg-white focus:border-emerald-500 focus:outline-none"
+
+            {success && (
+              <div className="p-2 bg-emerald-50 text-emerald-800 text-xs rounded-lg flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span>বাজার ডেট সফলভাবে সেট হয়েছে!</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
               >
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+                বন্ধ করুন
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                নিশ্চিত করুন
+              </button>
             </div>
-          </div>
-
-          {success && (
-            <div className="p-2 bg-emerald-50 text-emerald-800 text-xs rounded-lg flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-              <span>বাজার ডেট সফলভাবে সেট হয়েছে!</span>
+          </form>
+        ) : (
+          <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Lock className="w-4 h-4 text-amber-600" />
+              <span>শুধুমাত্র মেস ম্যানেজার বাজার দায়িত্ব নির্ধারণ করতে পারেন।</span>
             </div>
-          )}
-
-          <div className="pt-2 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
             >
               বন্ধ করুন
             </button>
-            <button
-              type="submit"
-              className="px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs cursor-pointer"
-            >
-              নিশ্চিত করুন
-            </button>
           </div>
-        </form>
+        )}
       </div>
     </Modal>
   );

@@ -9,16 +9,19 @@ import {
   UserCheck,
   Check,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
+import { useAuth } from '../context/AuthContext';
 import { formatBDT } from '../utils/calculations';
 import { Modal } from '../components/Modal';
 import { Badge } from '../components/Badge';
 
 export const BazarPlannerPage = () => {
   const { t } = useLanguage();
+  const { isManager } = useAuth();
   const {
     bazarList,
     addBazarItem,
@@ -83,14 +86,30 @@ export const BazarPlannerPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setAddModalOpen(true)}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>নতুন আইটেম যুক্ত করুন</span>
-        </button>
+        {isManager && (
+          <button
+            onClick={() => setAddModalOpen(true)}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>নতুন আইটেম যুক্ত করুন</span>
+          </button>
+        )}
       </div>
+
+      {!isManager && (
+        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-3 text-xs text-amber-900 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-amber-700" />
+          </div>
+          <div>
+            <p className="font-bold text-slate-900">শুধুমাত্র মেস ম্যানেজার বাজারের ফর্দ তৈরি করতে পারেন</p>
+            <p className="text-[11px] text-amber-800 mt-0.5">
+              মেম্বাররা মেসের আসন্ন বাজারের তালিকা ও আনুমানিক বাজেট দেখতে পারেন। নতুন আইটেম যুক্ত বা মুছে ফেলার ক্ষমতা ম্যানেজারের রয়েছে।
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -137,16 +156,26 @@ export const BazarPlannerPage = () => {
               }`}
             >
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => toggleBazarItem(item.id)}
-                  className="text-emerald-600 cursor-pointer"
-                >
-                  {item.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-slate-300 hover:text-slate-500" />
-                  )}
-                </button>
+                {isManager ? (
+                  <button
+                    onClick={() => toggleBazarItem(item.id)}
+                    className="text-emerald-600 cursor-pointer"
+                  >
+                    {item.completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-slate-300 hover:text-slate-500" />
+                    )}
+                  </button>
+                ) : (
+                  <div className="text-emerald-600 opacity-75">
+                    {item.completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-slate-300" />
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <h4
@@ -170,7 +199,7 @@ export const BazarPlannerPage = () => {
                   <span className="text-[10px] text-slate-400">আনুমানিক</span>
                 </div>
 
-                {item.completed && (
+                {isManager && item.completed && (
                   <button
                     onClick={() => handleConvertToExpense(item)}
                     className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
@@ -181,12 +210,15 @@ export const BazarPlannerPage = () => {
                   </button>
                 )}
 
-                <button
-                  onClick={() => deleteBazarItem(item.id)}
-                  className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {isManager && (
+                  <button
+                    onClick={() => deleteBazarItem(item.id)}
+                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    title="আইটেম মুছুন"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}

@@ -573,23 +573,33 @@ export const DashboardPage = () => {
 
                 {/* Card Quick Action Buttons */}
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => {
-                      setDepositForm({
-                        member_id: member.memberId,
-                        amount: isDue ? Math.abs(member.netBalance) : '',
-                        payment_method: 'bKash',
-                        transaction_ref: '',
-                        notes: ''
-                      });
-                      setQuickDepositOpen(true);
-                    }}
-                    className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold rounded-lg text-center transition-colors cursor-pointer"
-                  >
-                    {t('recordDeposit')}
-                  </button>
+                  {isManager ? (
+                    <button
+                      onClick={() => {
+                        setDepositForm({
+                          member_id: member.memberId,
+                          amount: isDue ? Math.abs(member.netBalance) : '',
+                          payment_method: 'bKash',
+                          transaction_ref: '',
+                          notes: ''
+                        });
+                        setQuickDepositOpen(true);
+                      }}
+                      className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold rounded-lg text-center transition-colors cursor-pointer"
+                    >
+                      {t('recordDeposit')}
+                    </button>
+                  ) : (
+                    <div className="flex-1 text-[11px] py-1 font-medium text-center">
+                      {isDue ? (
+                        <span className="text-rose-500 font-semibold">ম্যানেজারকে পরিশোধ করুন</span>
+                      ) : (
+                        <span className="text-emerald-600 font-semibold">পরিশোধিত</span>
+                      )}
+                    </div>
+                  )}
 
-                  {isDue && (
+                  {isManager && isDue && (
                     <button
                       onClick={() => setReminderTarget(member)}
                       className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"

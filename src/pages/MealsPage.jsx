@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   UtensilsCrossed,
   Calendar,
@@ -8,7 +9,9 @@ import {
   ChevronRight,
   Info,
   Clock,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  Lock
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -157,6 +160,28 @@ export const MealsPage = () => {
           )}
         </div>
       </div>
+
+      {!isManager && (
+        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-amber-700" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">শুধুমাত্র মেস ম্যানেজার মিল যুক্ত করতে পারেন</p>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                সদস্য হিসেবে আপনি এখানে মেসের দৈনিক মিল তালিকা দেখতে পারবেন। নিজের মিলের জন্য ড্যাশবোর্ড থেকে মিল রিকুয়েস্ট দিন।
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+          >
+            <span>মিল রিকুয়েস্ট দিন</span>
+          </Link>
+        </div>
+      )}
 
       {saveSuccess && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 animate-in fade-in duration-200">

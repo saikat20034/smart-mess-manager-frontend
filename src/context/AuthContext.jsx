@@ -41,15 +41,15 @@ export const AuthProvider = ({ children }) => {
     return managerUser;
   };
 
-  // Demo 1-click login as Member (নাসির)
+  // Demo 1-click login as Member (Shakib)
   const loginAsMember = () => {
     const memberUser = {
-      id: 'mem-002',
-      name: 'নাসির',
-      email: 'nasir@mess.ac.bd',
-      phone: '01822334455',
+      id: 'mem-003',
+      name: 'Shakib',
+      email: 'shakib@mess.ac.bd',
+      phone: '01933445566',
       role: 'member',
-      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop'
+      avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop'
     };
     setUser(memberUser);
     return memberUser;

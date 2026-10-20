@@ -11,7 +11,8 @@ import {
   FileText,
   Info,
   CheckCircle,
-  Smartphone
+  Smartphone,
+  Lock
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -171,6 +172,20 @@ export const DepositsPage = () => {
           </button>
         )}
       </div>
+
+      {!isManager && (
+        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-3 text-xs text-amber-900 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-amber-700" />
+          </div>
+          <div>
+            <p className="font-bold text-slate-900">শুধুমাত্র মেস ম্যানেজার টাকা জমা রেকর্ড করতে পারেন</p>
+            <p className="text-[11px] text-amber-800 mt-0.5">
+              মেম্বারদের জমা দেওয়া টাকা ম্যানেজার ভেরিফাই করে সিস্টেমে যুক্ত করেন। আপনার জমার পরিমাণ নিচের তালিকায় যাচাই করতে পারেন।
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Notice & KPI Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
