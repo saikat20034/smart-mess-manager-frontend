@@ -21,6 +21,7 @@ import { useMess } from '../context/MessContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useLiveClock } from '../hooks/useLiveClock';
 import { Badge } from './Badge';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Navbar = ({ onToggleSidebar }) => {
   const { user, isManager, switchRole, logout, isDemoMode } = useAuth();
@@ -137,6 +138,9 @@ export const Navbar = ({ onToggleSidebar }) => {
             <span className="text-slate-600 font-medium text-[11px]">{liveDateShort}</span>
           </div>
 
+          {/* Day & Night Mode Toggle */}
+          <ThemeToggle size="md" />
+
           {/* Language Toggle (বাংলা / EN) */}
           <button
             onClick={toggleLanguage}
@@ -176,6 +180,11 @@ export const Navbar = ({ onToggleSidebar }) => {
                       {isManager ? 'Mess Manager' : 'Mess Resident'}
                     </Badge>
                   </div>
+                </div>
+
+                <div className="px-4 py-2 text-xs flex items-center justify-between border-b border-slate-100">
+                  <span className="text-slate-600 font-medium">{isBn ? 'দিন / রাত মোড' : 'Day / Night Mode'}</span>
+                  <ThemeToggle size="sm" showLabel={true} />
                 </div>
 
                 <button

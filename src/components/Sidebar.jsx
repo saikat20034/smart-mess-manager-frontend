@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, logout } = useAuth();
@@ -140,13 +141,16 @@ export const Sidebar = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            title={t('logout')}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle size="sm" showLabel={false} />
+            <button
+              onClick={handleLogout}
+              title={t('logout')}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

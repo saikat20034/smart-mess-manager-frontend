@@ -10,16 +10,23 @@ import {
   Check,
   Copy,
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon,
+  Laptop
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
   const { mess, updateMessSettings, resetAllDemoData } = useMess();
+  const { theme, setTheme } = useTheme();
+  const { isBn } = useLanguage();
 
   const [form, setForm] = useState({
     name: mess?.name || 'Padma Hall Mess (Dhaka University)',
@@ -268,6 +275,77 @@ export const SettingsPage = () => {
                 Regenerate
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Day & Night Mode (Theme Settings) */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <Sun className="w-4 h-4 text-amber-500" />
+            <h3 className="text-sm font-bold text-slate-900">
+              {isBn ? 'থিম ও ডিসপ্লে মোড (দিন / রাত)' : 'Theme & Display (Day / Night)'}
+            </h3>
+          </div>
+          <p className="text-xs text-slate-500">
+            {isBn
+              ? 'আপনার সুবিধামতো দিন মোড (লাইট) অথবা রাত মোড (ডার্ক) নির্বাচন করুন।'
+              : 'Choose between Day mode (Light) or Night mode (Dark) for comfortable viewing.'}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={() => setTheme('light')}
+              className={`p-3.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                theme === 'light'
+                  ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 ring-2 ring-emerald-500/20 font-bold'
+                  : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <Sun className="w-4 h-4 text-amber-500" />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{isBn ? 'দিন মোড' : 'Day Mode'}</span>
+                <span className="text-[10px] text-slate-500">{isBn ? 'উজ্জ্বল লাইট থিম' : 'Clean Light'}</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme('dark')}
+              className={`p-3.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                theme === 'dark'
+                  ? 'border-indigo-500 bg-indigo-50/40 text-indigo-900 ring-2 ring-indigo-500/20 font-bold'
+                  : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <Moon className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{isBn ? 'রাত মোড' : 'Night Mode'}</span>
+                <span className="text-[10px] text-slate-500">{isBn ? 'চোখের জন্য আরামদায়ক' : 'Dark Navy'}</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme('system')}
+              className={`p-3.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                theme === 'system'
+                  ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 ring-2 ring-emerald-500/20 font-bold'
+                  : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <Laptop className="w-4 h-4 text-slate-500" />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{isBn ? 'সিস্টেম থিম' : 'System Theme'}</span>
+                <span className="text-[10px] text-slate-500">{isBn ? 'ডিভাইসের সাথে মিল রেখে' : 'Auto Match'}</span>
+              </div>
+            </button>
           </div>
         </div>
 

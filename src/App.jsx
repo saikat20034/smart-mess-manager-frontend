@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MessProvider } from './context/MessContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 
 // Pages
@@ -37,9 +38,10 @@ const ProtectedRoute = ({ children }) => {
 export function App() {
   return (
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <MessProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <MessProvider>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
@@ -77,6 +79,7 @@ export function App() {
           </MessProvider>
         </AuthProvider>
       </LanguageProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
