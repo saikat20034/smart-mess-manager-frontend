@@ -64,6 +64,28 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
+  // Update avatar
+  const updateAvatar = (newAvatar) => {
+    if (!user) return;
+    const updated = { ...user, avatar: newAvatar };
+    setUser(updated);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(updated));
+    }
+    return updated;
+  };
+
+  // Update profile details
+  const updateUserProfile = (updates) => {
+    if (!user) return;
+    const updated = { ...user, ...updates };
+    setUser(updated);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(updated));
+    }
+    return updated;
+  };
+
   const login = async ({ email, password }) => {
     setLoading(true);
     try {
@@ -151,6 +173,8 @@ export const AuthProvider = ({ children }) => {
         loginAsManager,
         loginAsMember,
         switchRole,
+        updateAvatar,
+        updateUserProfile,
         isDemoMode: !isSupabaseConfigured
       }}
     >

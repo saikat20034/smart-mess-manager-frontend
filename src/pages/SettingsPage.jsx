@@ -18,6 +18,7 @@ import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
@@ -58,6 +59,7 @@ export const SettingsPage = () => {
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [messLogoModalOpen, setMessLogoModalOpen] = useState(false);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -116,13 +118,49 @@ export const SettingsPage = () => {
       <form id="settings-form" onSubmit={handleSave} className="space-y-6">
         {/* Mess Basic Information */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
             <Building className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-bold text-slate-900">Mess Details & Location</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Mess Details & Location</h3>
+          </div>
+
+          {/* Mess Logo / Profile Picture Row */}
+          <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+            <div className="relative shrink-0">
+              {mess?.logo ? (
+                <img
+                  src={mess.logo}
+                  alt={mess?.name || 'Mess Logo'}
+                  className="w-14 h-14 rounded-full border-2 border-rose-500 object-cover shadow-xs"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-xl shadow-xs">
+                  {form.name ? form.name.trim().charAt(0).toUpperCase() : 'M'}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {isBn ? 'মেস প্রোফাইল ছবি / লোগো' : 'Mess Profile Picture / Logo'}
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {isBn
+                  ? 'ন্যাভবারের শীর্ষে ও মেস পরিচিতিতে এই ছবি প্রদর্শিত হবে'
+                  : 'Distinct from your personal manager profile photo'}
+              </p>
+            </div>
+            {isManager && (
+              <button
+                type="button"
+                onClick={() => setMessLogoModalOpen(true)}
+                className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              >
+                {isBn ? 'লোগো পরিবর্তন' : 'Change Logo'}
+              </button>
+            )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Mess Name *</label>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Mess Name *</label>
             <input
               type="text"
               required
@@ -345,6 +383,11 @@ export const SettingsPage = () => {
           </div>
         </div>
       </form>
+
+      <MessProfilePictureModal
+        isOpen={messLogoModalOpen}
+        onClose={() => setMessLogoModalOpen(false)}
+      />
     </div>
   );
 };

@@ -171,9 +171,17 @@ export const MembersPage = () => {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
-                  {member.name.slice(0, 2).toUpperCase()}
-                </div>
+                {member.avatar ? (
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                    {member.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                     {member.name}

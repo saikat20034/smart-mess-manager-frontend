@@ -178,6 +178,7 @@ export function calculateMemberBalances({
       roomNumber: member.room_number || '',
       role: member.role || 'member',
       status: member.status || 'active',
+      avatar: member.avatar || '',
       mealUnits: units,
       mealCost,
       sharedCost,

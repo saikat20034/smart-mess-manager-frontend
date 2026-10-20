@@ -72,9 +72,17 @@ export const MySummaryPage = () => {
         <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/30 border-2 border-emerald-400 flex items-center justify-center text-xl font-bold">
-                {activeSummary.name.slice(0, 2).toUpperCase()}
-              </div>
+              {activeSummary.avatar ? (
+                <img
+                  src={activeSummary.avatar}
+                  alt={activeSummary.name}
+                  className="w-14 h-14 rounded-full border-2 border-emerald-400 object-cover shadow-sm"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-emerald-500/30 border-2 border-emerald-400 flex items-center justify-center text-xl font-bold">
+                  {activeSummary.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-white">{activeSummary.name}</h2>

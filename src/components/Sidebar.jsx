@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
 import { ThemeToggle } from './ThemeToggle';
+import { ProfilePictureModal } from './ProfilePictureModal';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, logout } = useAuth();
@@ -28,6 +29,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
     formatMonthName
   } = useMess();
   const navigate = useNavigate();
+  const [profilePhotoModalOpen, setProfilePhotoModalOpen] = useState(false);
 
   const navItems = [
     { path: '/dashboard', label: t('homePage'), icon: LayoutDashboard },
@@ -46,20 +48,20 @@ export const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const navContent = (
-    <div className="flex flex-col h-full bg-white text-slate-700 w-56 border-r border-slate-200">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 w-56 border-r border-slate-200 dark:border-slate-800">
       {/* Mobile Header with Close */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-100 lg:hidden">
-        <span className="font-bold text-slate-900 text-xs">মেনু</span>
+      <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 lg:hidden">
+        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{isBn ? 'মেনু' : 'Menu'}</span>
         <button
           onClick={onClose}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Main Navigation Links (Matching screenshot labels: হোম পেজ, হিসাব রুম, মিল যুক্ত, খরচ যুক্ত) */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      {/* Main Navigation Links */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -70,30 +72,30 @@ export const Sidebar = ({ isOpen, onClose }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-slate-100 text-slate-900 shadow-2xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60'
                 }`
               }
             >
-              <Icon className="w-4 h-4 text-slate-500 shrink-0" />
+              <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>{item.label}</span>
             </NavLink>
           );
         })}
 
         {/* Active Month Indicator & Quick Switcher */}
-        <div className="pt-2 pb-1 border-t border-slate-100 my-1">
-          <div className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs">
-            <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
+        <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800 my-1">
+          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs">
+            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">
               <span>{isBn ? 'সক্রিয় মাস' : 'Active Month'}</span>
-              <span className={`px-1.5 py-0.5 rounded-full font-bold ${isCurrentMonth ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+              <span className={`px-1.5 py-0.5 rounded-full font-bold ${isCurrentMonth ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'}`}>
                 {isCurrentMonth ? (isBn ? 'চলতি' : 'Current') : (isBn ? 'বিগত' : 'Past')}
               </span>
             </div>
-            <p className="font-bold text-slate-900 text-xs truncate">
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate">
               {formatMonthName(selectedMonth, isBn)}
             </p>
-            <div className="mt-2 pt-2 border-t border-slate-200/60">
+            <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
               {isCurrentMonth ? (
                 <button
                   type="button"
@@ -102,9 +104,9 @@ export const Sidebar = ({ isOpen, onClose }) => {
                     navigate('/previous-month');
                     onClose && onClose();
                   }}
-                  className="w-full text-center py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700 cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+                  className="w-full text-center py-1.5 px-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1.5"
                 >
-                  <History className="w-3 h-3 text-slate-500" />
+                  <History className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                   <span>{t('previousMonth')}</span>
                 </button>
               ) : (
@@ -125,34 +127,53 @@ export const Sidebar = ({ isOpen, onClose }) => {
         </div>
       </nav>
 
-      {/* Bottom User Profile Section (Matching screenshot: Avatar, "Manager", Logout icon) */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+      {/* Bottom User Profile Section */}
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <img
-              src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'}
-              alt={user?.name || 'User'}
-              className="w-8 h-8 rounded-full border border-slate-200 object-cover"
-            />
+          <button
+            type="button"
+            onClick={() => setProfilePhotoModalOpen(true)}
+            className="flex items-center gap-2.5 text-left group cursor-pointer hover:opacity-90 transition-opacity"
+            title={isBn ? "প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change profile picture"}
+          >
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user?.name || 'User'}
+                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover group-hover:ring-2 group-hover:ring-rose-400 transition-all"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-xs group-hover:ring-2 group-hover:ring-rose-400 transition-all">
+                {user?.name ? user.name.slice(0, 1).toUpperCase() : 'S'}
+              </div>
+            )}
             <div>
-              <span className="text-xs font-bold text-slate-800 block">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate max-w-[85px]">
+                {user?.name || (isManager ? 'Manager' : 'Member')}
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                 {isManager ? 'Manager' : 'Member'}
               </span>
             </div>
-          </div>
+          </button>
 
           <div className="flex items-center gap-1.5">
             <ThemeToggle size="sm" showLabel={false} />
             <button
               onClick={handleLogout}
               title={t('logout')}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
+
+      <ProfilePictureModal
+        isOpen={profilePhotoModalOpen}
+        onClose={() => setProfilePhotoModalOpen(false)}
+      />
     </div>
   );
 
