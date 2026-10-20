@@ -360,64 +360,64 @@ export const DashboardPage = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {/* মোট মিল (Light Blue) */}
-              <div className="bg-[#e0f2fe] rounded-2xl p-4 border border-sky-100/60 shadow-xs flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-sky-200/80 text-sky-800 flex items-center justify-center mb-2">
+              <div className="bg-[#e0f2fe] dark:bg-sky-950/40 rounded-2xl p-4 border border-sky-100/60 dark:border-sky-900/50 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-sky-200/80 dark:bg-sky-900/60 text-sky-800 dark:text-sky-300 flex items-center justify-center mb-2">
                   <UtensilsCrossed className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                  <h4 className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100">
                     {Number(currentMember?.mealUnits ?? 0).toFixed(2)}
                   </h4>
-                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium block mt-0.5">
                     {t('myTotalMeals')}
                   </span>
                 </div>
               </div>
 
               {/* মোট জমা (Light Teal / Emerald) */}
-              <div className="bg-[#d1fae5] rounded-2xl p-4 border border-emerald-100/60 shadow-xs flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-emerald-200/80 text-emerald-800 flex items-center justify-center mb-2">
+              <div className="bg-[#d1fae5] dark:bg-emerald-950/40 rounded-2xl p-4 border border-emerald-100/60 dark:border-emerald-900/50 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center mb-2">
                   <Coins className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                  <h4 className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100">
                     {Number(currentMember?.totalDeposits ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
-                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium block mt-0.5">
                     {t('myTotalDeposits')}
                   </span>
                 </div>
               </div>
 
               {/* মোট খরচ (Light Pink) */}
-              <div className="bg-[#fce7f3] rounded-2xl p-4 border border-pink-100/60 shadow-xs flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-pink-200/80 text-pink-800 flex items-center justify-center mb-2">
+              <div className="bg-[#fce7f3] dark:bg-pink-950/40 rounded-2xl p-4 border border-pink-100/60 dark:border-pink-900/50 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-pink-200/80 dark:bg-pink-900/60 text-pink-800 dark:text-pink-300 flex items-center justify-center mb-2">
                   <Receipt className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold font-mono text-slate-900">
+                  <h4 className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100">
                     {Number(currentMember?.totalCost ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
-                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium block mt-0.5">
                     {t('myTotalExpenses')}
                   </span>
                 </div>
               </div>
 
               {/* ব্যালেন্স (Light Yellow / Amber) */}
-              <div className="bg-[#fef3c7] rounded-2xl p-4 border border-amber-100/60 shadow-xs flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-amber-200/80 text-amber-800 flex items-center justify-center mb-2">
+              <div className="bg-[#fef3c7] dark:bg-amber-950/40 rounded-2xl p-4 border border-amber-100/60 dark:border-amber-900/50 shadow-xs flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-amber-200/80 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 flex items-center justify-center mb-2">
                   <Wallet className="w-4 h-4" />
                 </div>
                 <div>
                   <h4
                     className={`text-xl font-bold font-mono ${
-                      Number(currentMember?.netBalance ?? 0) >= 0 ? 'text-emerald-700' : 'text-slate-900'
+                      Number(currentMember?.netBalance ?? 0) >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-slate-100'
                     }`}
                   >
                     {Number(currentMember?.netBalance ?? 0).toFixed(2)} <span className="text-xs">৳</span>
                   </h4>
-                  <span className="text-[11px] text-slate-600 font-medium block mt-0.5">
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium block mt-0.5">
                     {t('myBalance')}
                   </span>
                 </div>
@@ -670,16 +670,16 @@ export const DashboardPage = () => {
 
           {/* If new mess with 0 or 1 member, show dashed invite card */}
           {memberBalances.length <= 1 && (
-            <div className="bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-300 p-6 flex flex-col items-center justify-center text-center shadow-xs">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-800/80 p-6 flex flex-col items-center justify-center text-center shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-3">
                 <Users className="w-6 h-6" />
               </div>
-              <h4 className="text-xs font-bold text-slate-800">রুমমেটদের যুক্ত করুন</h4>
-              <p className="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">রুমমেটদের যুক্ত করুন</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 mt-1 max-w-xs leading-relaxed">
                 আপনার মেসে এখনো কোনো মেম্বার যুক্ত হয়নি। ইনভাইটেশন কোড পাঠিয়ে রুমমেটদের যুক্ত হতে বলুন।
               </p>
               <div className="mt-3 flex items-center gap-2">
-                <code className="px-2.5 py-1 bg-white border border-emerald-200 text-emerald-700 font-mono font-bold text-xs rounded-lg">
+                <code className="px-2.5 py-1 bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-xs rounded-lg">
                   {mess?.invite_code || 'MESS2026'}
                 </code>
               </div>

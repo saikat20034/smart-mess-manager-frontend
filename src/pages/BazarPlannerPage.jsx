@@ -98,13 +98,13 @@ export const BazarPlannerPage = () => {
       </div>
 
       {!isManager && (
-        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-3 text-xs text-amber-900 shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
-            <Lock className="w-4 h-4 text-amber-700" />
+        <div className="p-4 bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl flex items-center gap-3 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-amber-700 dark:text-amber-300" />
           </div>
           <div>
-            <p className="font-bold text-slate-900">শুধুমাত্র মেস ম্যানেজার বাজারের ফর্দ তৈরি করতে পারেন</p>
-            <p className="text-[11px] text-amber-800 mt-0.5">
+            <p className="font-bold text-slate-900 dark:text-slate-100">শুধুমাত্র মেস ম্যানেজার বাজারের ফর্দ তৈরি করতে পারেন</p>
+            <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5">
               মেম্বাররা মেসের আসন্ন বাজারের তালিকা ও আনুমানিক বাজেট দেখতে পারেন। নতুন আইটেম যুক্ত বা মুছে ফেলার ক্ষমতা ম্যানেজারের রয়েছে।
             </p>
           </div>
@@ -113,30 +113,30 @@ export const BazarPlannerPage = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500">মোট আইটেম</span>
-          <h4 className="text-xl font-bold text-slate-900 mt-1 font-mono">{bazarList.length} টি</h4>
-          <span className="text-[11px] text-emerald-600 font-medium mt-0.5 block">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400">মোট আইটেম</span>
+          <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1 font-mono">{bazarList.length} টি</h4>
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 block">
             {completedCount} টি কেনা সম্পন্ন
           </span>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500">আনুমানিক মোট বাজার বাজেট</span>
-          <h4 className="text-xl font-bold text-emerald-700 mt-1 font-mono">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400">আনুমানিক মোট বাজার বাজেট</span>
+          <h4 className="text-xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 font-mono">
             {formatBDT(totalEstimated)}
           </h4>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">প্রাক্কলিত হিসাব</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 block">প্রাক্কলিত হিসাব</span>
         </div>
 
-        <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-emerald-900 block">স্মার্ট সুবিধা:</span>
-            <span className="text-[11px] text-emerald-700 block mt-0.5">
+            <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 block">স্মার্ট সুবিধা:</span>
+            <span className="text-[11px] text-emerald-700 dark:text-emerald-400 block mt-0.5">
               কেনা শেষ হলে 'মেস খরচে যুক্ত করুন' চাপুন
             </span>
           </div>
-          <Sparkles className="w-6 h-6 text-emerald-600" />
+          <Sparkles className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
         </div>
       </div>
 

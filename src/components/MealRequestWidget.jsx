@@ -101,23 +101,23 @@ export const MealRequestWidget = () => {
       {/* 3 Meal Inputs (সকাল, দুপুর, রাত) */}
       <div className="grid grid-cols-3 gap-3">
         {/* Morning / সকাল */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100 text-center">
-          <span className="text-[10px] text-slate-400 font-medium block">
+        <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-center">
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
             {t('morning')} ({bWeight.toFixed(1)})
           </span>
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <button
               onClick={() => setMorning(Math.max(0, Math.round((morning - 1) * 100) / 100))}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               -
             </button>
-            <span className="text-sm font-bold font-mono text-slate-800">
+            <span className="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">
               {morning.toFixed(1)}
             </span>
             <button
               onClick={() => setMorning(Math.round((morning + 1) * 100) / 100)}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               +
             </button>
@@ -125,23 +125,23 @@ export const MealRequestWidget = () => {
         </div>
 
         {/* Lunch / দুপুর */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100 text-center">
-          <span className="text-[10px] text-slate-400 font-medium block">
+        <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-center">
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
             {t('lunch')} (1.0)
           </span>
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <button
               onClick={() => setLunch(Math.max(0, lunch - 1))}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               -
             </button>
-            <span className="text-sm font-bold font-mono text-slate-800">
+            <span className="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">
               {lunch.toFixed(1)}
             </span>
             <button
               onClick={() => setLunch(lunch + 1)}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               +
             </button>
@@ -149,23 +149,23 @@ export const MealRequestWidget = () => {
         </div>
 
         {/* Dinner / রাত */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100 text-center">
-          <span className="text-[10px] text-slate-400 font-medium block">
+        <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-center">
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
             {t('dinner')} (1.0)
           </span>
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <button
               onClick={() => setDinner(Math.max(0, dinner - 1))}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               -
             </button>
-            <span className="text-sm font-bold font-mono text-slate-800">
+            <span className="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">
               {dinner.toFixed(1)}
             </span>
             <button
               onClick={() => setDinner(dinner + 1)}
-              className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 flex items-center justify-center text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer"
             >
               +
             </button>

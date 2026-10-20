@@ -209,38 +209,38 @@ export const AllMonthsPage = () => {
 
                 {/* Key Metrics Rows */}
                 <div className="p-4 grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="bg-slate-50/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
                       {t('totalMeals')}
                     </span>
-                    <span className="font-mono font-bold text-slate-800 text-sm">
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-100 text-sm">
                       {Number(mealsCount).toFixed(2)}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="bg-slate-50/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
                       {t('mealRate')}
                     </span>
-                    <span className="font-mono font-bold text-emerald-700 text-sm">
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-sm">
                       {formatBDT(mealRate)}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="bg-slate-50/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
                       {isBn ? 'মোট খরচ' : 'Total Expense'}
                     </span>
-                    <span className="font-mono font-bold text-slate-800 text-xs">
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">
                       {formatBDT(expensesTotal)}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="bg-slate-50/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium block">
                       {t('totalDeposits')}
                     </span>
-                    <span className="font-mono font-bold text-teal-700 text-xs">
+                    <span className="font-mono font-bold text-teal-700 dark:text-teal-400 text-xs">
                       {formatBDT(depositsTotal)}
                     </span>
                   </div>
@@ -432,8 +432,8 @@ export const AllMonthsPage = () => {
         }
       >
         <div className="space-y-4">
-          <div className="p-3.5 bg-rose-50/80 border border-rose-200/80 rounded-2xl text-xs text-rose-950 leading-relaxed">
-            <p className="font-bold text-rose-700 mb-1 flex items-center gap-1">
+          <div className="p-3.5 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/60 rounded-2xl text-xs text-rose-950 dark:text-rose-200 leading-relaxed">
+            <p className="font-bold text-rose-700 dark:text-rose-400 mb-1 flex items-center gap-1">
               <span>⚠️</span>
               <span>
                 {isBn
@@ -445,21 +445,21 @@ export const AllMonthsPage = () => {
               {isBn ? (
                 <>
                   আপনি{' '}
-                  <strong className="font-bold text-rose-900 underline">
+                  <strong className="font-bold text-rose-900 dark:text-rose-300 underline">
                     {formatMonthName(deleteTargetMonth, true)} ({deleteTargetMonth})
                   </strong>
                   -এর হিসাব সম্পূর্ণ মুছে ফেলতে যাচ্ছেন। এর ফলে এই মাসের{' '}
-                  <strong>সকল মিল এন্ট্রি, বাজার ও যৌথ খরচ, মেম্বারদের ডিপোজিট এবং সেটেলমেন্ট শিট</strong>{' '}
+                  <strong className="text-rose-900 dark:text-rose-200">সকল মিল এন্ট্রি, বাজার ও যৌথ খরচ, মেম্বারদের ডিপোজিট এবং সেটেলমেন্ট শিট</strong>{' '}
                   স্থায়ীভাবে মুছে যাবে।
                 </>
               ) : (
                 <>
                   You are about to permanently delete all records for{' '}
-                  <strong className="font-bold text-rose-900 underline">
+                  <strong className="font-bold text-rose-900 dark:text-rose-300 underline">
                     {formatMonthName(deleteTargetMonth, false)} ({deleteTargetMonth})
                   </strong>
                   . All associated{' '}
-                  <strong>meals, bazar expenses, deposits, and settlement sheets</strong>{' '}
+                  <strong className="text-rose-900 dark:text-rose-200">meals, bazar expenses, deposits, and settlement sheets</strong>{' '}
                   will be deleted forever.
                 </>
               )}
@@ -467,11 +467,11 @@ export const AllMonthsPage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
               {isBn ? (
                 <>
                   নিশ্চিত করতে নিচের বক্সে{' '}
-                  <span className="font-mono text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 font-bold tracking-wider">
+                  <span className="font-mono text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800 font-bold tracking-wider">
                     delete
                   </span>{' '}
                   টাইপ করুন:

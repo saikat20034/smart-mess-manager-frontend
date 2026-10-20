@@ -72,16 +72,16 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
   return (
     <div className={`rounded-2xl border p-5 shadow-xs transition-all ${
       isNewMess
-        ? 'bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-emerald-200'
-        : 'bg-white border-slate-200'
+        ? 'bg-gradient-to-br from-emerald-50 via-teal-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-emerald-200 dark:border-emerald-800/60'
+        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
     }`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-emerald-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-emerald-100 dark:border-slate-800">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
             <Key className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <span>{isBn ? 'মেস ইনভাইটেশন কোড ও মেম্বার জয়েন' : 'Mess Invitation & Member Join'}</span>
               {isNewMess && (
                 <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
@@ -89,7 +89,7 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
                 </span>
               )}
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-300">
               {isNewMess
                 ? 'আপনার মেসে এখনো কোনো মেম্বার যুক্ত হয়নি। রুমমেটদের সাথে এই কোড শেয়ার করুন!'
                 : 'রুমমেটরা এই কোড দিয়ে সরাসরি মেসে যুক্ত হতে পারবে।'}
@@ -98,15 +98,15 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
         </div>
 
         {/* Code display pill */}
-        <div className="flex items-center gap-2 bg-white border border-emerald-200 rounded-xl px-3 py-1.5 shadow-2xs">
-          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">CODE:</span>
-          <code className="text-sm font-mono font-extrabold text-emerald-700 tracking-wider">
+        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/80 rounded-xl px-3 py-1.5 shadow-2xs">
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium uppercase tracking-wider">CODE:</span>
+          <code className="text-sm font-mono font-extrabold text-emerald-700 dark:text-emerald-400 tracking-wider">
             {inviteCode}
           </code>
           <button
             onClick={copyCodeOnly}
             title="কোড কপি করুন"
-            className="p-1 rounded text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-colors"
+            className="p-1 rounded text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-slate-700 cursor-pointer transition-colors"
           >
             {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -147,30 +147,30 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
         {/* 1-Click Copy Direct Link */}
         <button
           onClick={copyFullLink}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-2xs"
         >
-          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-slate-500" />}
+          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
           <span>{copiedLink ? 'জয়েন লিঙ্ক কপি হয়েছে!' : 'জয়েন লিঙ্ক কপি করুন'}</span>
         </button>
       </div>
 
       {/* Step Guide for Roommates when mess is fresh */}
       {isNewMess && (
-        <div className="mt-4 pt-3 border-t border-emerald-100/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-600">
-          <div className="flex items-center gap-1.5 bg-white/70 rounded-lg p-2 border border-emerald-100">
-            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-xs">
+        <div className="mt-4 pt-3 border-t border-emerald-100/80 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+          <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-800/80 rounded-lg p-2 border border-emerald-100 dark:border-slate-700">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center shrink-0 text-xs">
               ১
             </span>
             <span>লিঙ্ক রুমমেটদের গ্রুপে পাঠান</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-white/70 rounded-lg p-2 border border-emerald-100">
-            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-xs">
+          <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-800/80 rounded-lg p-2 border border-emerald-100 dark:border-slate-700">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center shrink-0 text-xs">
               ২
             </span>
             <span>তারা 'কোড দিয়ে যোগ দিন' সিলেক্ট করবে</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-white/70 rounded-lg p-2 border border-emerald-100">
-            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-xs">
+          <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-800/80 rounded-lg p-2 border border-emerald-100 dark:border-slate-700">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center shrink-0 text-xs">
               ৩
             </span>
             <span>কোড দিলেই সরাসরি মেসে যুক্ত হবে</span>
