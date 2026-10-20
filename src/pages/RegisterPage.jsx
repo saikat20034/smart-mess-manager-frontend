@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useMess } from '../context/MessContext';
 import { useLanguage } from '../context/LanguageContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
@@ -104,20 +105,25 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative transition-colors duration-200">
+      {/* Top Right Day/Night Toggle */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle size="sm" showLabel={false} />
+      </div>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
             S
           </div>
-          <span className="font-bold text-slate-900 text-xl tracking-tight">
+          <span className="font-bold text-slate-900 dark:text-white text-xl tracking-tight">
             Smart Mess <span className="text-rose-500">Manager</span>
           </span>
         </Link>
-        <h2 className="mt-4 text-center text-xl font-bold tracking-tight text-slate-900">
+        <h2 className="mt-4 text-center text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           নতুন একাউন্ট সাইন আপ করুন
         </h2>
-        <p className="mt-1 text-center text-xs text-slate-500">
+        <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">
           ইতিমধ্যে একাউন্ট আছে?{' '}
           <Link to="/login" className="font-semibold text-rose-500 hover:text-rose-600">
             লগইন করুন
@@ -126,16 +132,16 @@ export const RegisterPage = () => {
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl border border-slate-100 sm:rounded-2xl sm:px-10">
+        <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl border border-slate-100 dark:border-slate-800 sm:rounded-2xl sm:px-10">
           {/* Mode Selector Tabs */}
-          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-slate-100 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
             <button
               type="button"
               onClick={() => setMode('create')}
               className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 mode === 'create'
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               নতুন মেস খুলুন (Manager)
@@ -145,8 +151,8 @@ export const RegisterPage = () => {
               onClick={() => setMode('join')}
               className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 mode === 'join'
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               কোড দিয়ে যোগ দিন (Member)
@@ -154,7 +160,7 @@ export const RegisterPage = () => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{error}</span>
             </div>
@@ -163,7 +169,7 @@ export const RegisterPage = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Full Name */}
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 আপনার পূর্ণ নাম *
               </label>
               <div className="relative">
@@ -174,7 +180,7 @@ export const RegisterPage = () => {
                   placeholder="যেমন: মোঃ সাইফুল ইসলাম"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                  className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                 />
               </div>
             </div>
@@ -182,7 +188,7 @@ export const RegisterPage = () => {
             {/* Email and Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   ইমেইল এড্রেস *
                 </label>
                 <div className="relative">
@@ -193,13 +199,13 @@ export const RegisterPage = () => {
                     placeholder="student@univ.edu.bd"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   মোবাইল / বিকাশ নম্বর *
                 </label>
                 <div className="relative">
@@ -210,7 +216,7 @@ export const RegisterPage = () => {
                     placeholder="017XXXXXXXX"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -219,7 +225,7 @@ export const RegisterPage = () => {
             {/* Mess Name or Invite Code */}
             {mode === 'create' ? (
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   মেসের নাম *
                 </label>
                 <div className="relative">
@@ -230,13 +236,13 @@ export const RegisterPage = () => {
                     placeholder="যেমন: পদ্মা হল এক্সটেনশন মেস"
                     value={formData.messName}
                     onChange={(e) => setFormData({ ...formData, messName: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   মেস ইনভাইট কোড *
                 </label>
                 <div className="relative">
@@ -247,7 +253,7 @@ export const RegisterPage = () => {
                     placeholder="যেমন: SAIKAT2026"
                     value={formData.inviteCode}
                     onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none font-mono font-bold tracking-wider"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none font-mono font-bold tracking-wider bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -256,7 +262,7 @@ export const RegisterPage = () => {
             {/* Passwords */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   পাসওয়ার্ড *
                 </label>
                 <div className="relative">
@@ -267,13 +273,13 @@ export const RegisterPage = () => {
                     placeholder="কমপক্ষে ৬ অক্ষর"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   পাসওয়ার্ড নিশ্চিত করুন *
                 </label>
                 <div className="relative">
@@ -284,7 +290,7 @@ export const RegisterPage = () => {
                     placeholder="পুনরায় পাসওয়ার্ড লিখুন"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-rose-500 focus:outline-none"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                   />
                 </div>
               </div>

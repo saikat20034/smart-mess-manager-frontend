@@ -142,9 +142,12 @@
 
 .dark .bg-white\/60,
 .dark .bg-white\/70,
-.dark .bg-white\/80 {
-  background-color: rgba(30, 41, 59, 0.7) !important;
-  border-color: #334155 !important;
+.dark .bg-white\/80,
+.dark .bg-white\/90,
+.dark .bg-white\/95,
+.dark [class*="bg-white\/"] {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
 }
 
 .dark .bg-slate-50,

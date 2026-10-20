@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatBDT } from '../utils/calculations';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export const LandingPage = () => {
   const { loginAsManager, loginAsMember } = useAuth();
@@ -69,30 +70,31 @@ export const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* Top Navigation */}
-      <nav className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40">
+      <nav className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-xs">
               <Building2 className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-900 text-base tracking-tight">
-              Smart Mess <span className="text-emerald-600">Manager</span>
+            <span className="font-bold text-slate-900 dark:text-white text-base tracking-tight">
+              Smart Mess <span className="text-emerald-500 dark:text-emerald-400">Manager</span>
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">
-            <a href="#features" className="hover:text-emerald-600 transition-colors">Features</a>
-            <a href="#calculator" className="hover:text-emerald-600 transition-colors">Live Rate Calculator</a>
-            <a href="#how-it-works" className="hover:text-emerald-600 transition-colors">How It Works</a>
-            <a href="#faqs" className="hover:text-emerald-600 transition-colors">FAQs</a>
+          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <a href="#features" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Features</a>
+            <a href="#calculator" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Live Rate Calculator</a>
+            <a href="#how-it-works" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">How It Works</a>
+            <a href="#faqs" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">FAQs</a>
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle size="sm" showLabel={false} />
             <Link
               to="/login"
-              className="text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-lg"
+              className="text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white px-3 py-2 rounded-lg"
             >
               Sign In
             </Link>
@@ -110,57 +112,57 @@ export const LandingPage = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
             <span>Built specifically for Bangladeshi University Messes & Shared Flats</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 max-w-4xl mx-auto leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-tight">
             Manage Your Mess.{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
               Simplify Your Life.
             </span>
           </h1>
 
-          <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
             Eliminate messy paper khata notebooks and calculation arguments. Track daily meals, bazar expenses, bKash advances, and automated meal rates with total financial transparency.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => handleLaunchDemo('manager')}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-md transition-all cursor-pointer"
             >
               <span>Explore Instant Demo (No signup)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <Link
               to="/register"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm px-6 py-3 rounded-xl border border-slate-200 shadow-xs transition-all"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs transition-all"
             >
               <span>Start Managing Your Mess</span>
             </Link>
           </div>
 
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
             No credit card needed • Ready for bKash, Nagad & Bangladeshi Taka (৳)
           </p>
         </div>
       </section>
 
       {/* Interactive Live Meal Rate Calculator Simulation */}
-      <section id="calculator" className="py-12 bg-white border-y border-slate-200">
+      <section id="calculator" className="py-12 bg-white dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
               Interactive Meal Rate Simulator
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Try the calculation logic live. Adjust meals, grocery costs, and cook salary to see real-time BDT results.
             </p>
           </div>
 
-          <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="bg-slate-900 dark:bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             {/* Sliders */}
             <div className="space-y-5">
               <div>
@@ -267,74 +269,74 @@ export const LandingPage = () => {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-16">
+      <section id="features" className="py-16 bg-slate-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
               Built for Real Student Mess Needs
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-slate-500">
+            <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               Everything required to maintain perfect transparency and eliminate hostel accounting friction.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
                 <UtensilsCrossed className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Daily Bulk Matrix</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Daily Bulk Matrix</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Record Breakfast (0.5), Lunch (1.0), and Dinner (1.0) for every member on a single screen with 1-click presets.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
                 <Receipt className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Bazar & Shared Overhead</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Bazar & Shared Overhead</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Log groceries and divide shared bills like Cook Khala bill, WiFi, and LPG cylinders according to custom rules.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                 <Calculator className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Auto Meal Rate Calculation</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Auto Meal Rate Calculation</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Automated decimal precision in BDT. No more manual notebook mistakes or rounding disputes between members.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center mb-4">
                 <Smartphone className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">bKash & Nagad Tracking</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">bKash & Nagad Tracking</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Track deposit advances paid by members with transaction references (TrxID) and live balance updates.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
                 <FileSpreadsheet className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Monthly Settlement & CSV</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Monthly Settlement & CSV</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Finalize settlements with immutable audit snapshots, printable PDF-ready views, and downloadable Excel/CSV files.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Dual Roles & Privacy</h3>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Dual Roles & Privacy</h3>
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Mess Managers have full edit rights; residents have real-time transparency into their personal food bill and balance.
               </p>
             </div>
@@ -343,40 +345,40 @@ export const LandingPage = () => {
       </section>
 
       {/* How It Works (3 Steps) */}
-      <section id="how-it-works" className="py-16 bg-slate-100/70 border-t border-slate-200">
+      <section id="how-it-works" className="py-16 bg-slate-100/70 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">How It Works in 3 Steps</h2>
-            <p className="mt-2 text-xs text-slate-500">Straightforward mess accounting designed for busy university students.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">How It Works in 3 Steps</h2>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Straightforward mess accounting designed for busy university students.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs text-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs text-center">
               <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center mx-auto text-lg mb-4">
                 1
               </div>
-              <h3 className="text-base font-bold text-slate-900">Create Mess & Invite</h3>
-              <p className="text-xs text-slate-600 mt-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Create Mess & Invite</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2">
                 Manager registers the mess and shares a 6-letter invite code with roommates to join instantly.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs text-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs text-center">
               <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center mx-auto text-lg mb-4">
                 2
               </div>
-              <h3 className="text-base font-bold text-slate-900">Log Daily Meals & Bazar</h3>
-              <p className="text-xs text-slate-600 mt-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Log Daily Meals & Bazar</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2">
                 Use the daily bulk matrix to record breakfast, lunch, and dinner, and log market expenses as they happen.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs text-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs text-center">
               <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center mx-auto text-lg mb-4">
                 3
               </div>
-              <h3 className="text-base font-bold text-slate-900">Auto Settle & Export</h3>
-              <p className="text-xs text-slate-600 mt-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Auto Settle & Export</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2">
                 At month-end, click Finalize Settlement to see who pays and who receives refunds with 100% transparency.
               </p>
             </div>
@@ -385,19 +387,19 @@ export const LandingPage = () => {
       </section>
 
       {/* FAQs */}
-      <section id="faqs" className="py-16">
+      <section id="faqs" className="py-16 bg-slate-50 dark:bg-slate-950">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900">Frequently Asked Questions</h2>
-            <p className="text-xs text-slate-500 mt-1">Common questions about Bangladeshi mess management.</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Common questions about Bangladeshi mess management.</p>
           </div>
 
           <div className="space-y-3">
             {faqs.map((faq, idx) => (
-              <div key={idx} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+              <div key={idx} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full flex items-center justify-between p-4 text-left font-semibold text-xs text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between p-4 text-left font-semibold text-xs text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
@@ -407,7 +409,7 @@ export const LandingPage = () => {
                   />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                  <div className="px-4 pb-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
                     {faq.a}
                   </div>
                 )}
