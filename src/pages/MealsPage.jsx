@@ -11,12 +11,81 @@ import {
   Clock,
   Sparkles,
   ShieldAlert,
-  Lock
+  Lock,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
 import { Badge } from '../components/Badge';
 import { calculateMealUnits } from '../utils/calculations';
+
+/**
+ * Plus / Minus Stepper Component for Meals with 0.25 increment/decrement
+ */
+const MealUnitStepper = ({ value, onChange, disabled }) => {
+  const currentVal = Number(value) || 0;
+
+  const handleMinus = () => {
+    if (disabled || currentVal <= 0) return;
+    const next = Math.max(0, Math.round((currentVal - 0.25) * 100) / 100);
+    onChange(next);
+  };
+
+  const handlePlus = () => {
+    if (disabled) return;
+    const next = Math.round((currentVal + 0.25) * 100) / 100;
+    onChange(next);
+  };
+
+  const handleInputChange = (e) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      onChange(0);
+      return;
+    }
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed) && parsed >= 0) {
+      onChange(Math.round(parsed * 100) / 100);
+    }
+  };
+
+  const displayVal = Number(currentVal.toFixed(2));
+
+  return (
+    <div className="inline-flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-0.5 shadow-2xs">
+      <button
+        type="button"
+        disabled={disabled || currentVal <= 0}
+        onClick={handleMinus}
+        className="w-7 h-7 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-400 text-slate-700 font-bold flex items-center justify-center border border-slate-200/80 shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed select-none"
+        title="0.25 কমান (-0.25)"
+      >
+        <Minus className="w-3 h-3 stroke-[2.5]" />
+      </button>
+
+      <input
+        type="number"
+        step="0.25"
+        min="0"
+        disabled={disabled}
+        value={displayVal}
+        onChange={handleInputChange}
+        className="w-12 text-center font-mono font-bold text-xs text-slate-900 bg-transparent focus:outline-none disabled:text-slate-500 py-1"
+      />
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={handlePlus}
+        className="w-7 h-7 rounded-lg bg-white hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-400 text-slate-700 font-bold flex items-center justify-center border border-slate-200/80 shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed select-none"
+        title="0.25 বাড়ান (+0.25)"
+      >
+        <Plus className="w-3 h-3 stroke-[2.5]" />
+      </button>
+    </div>
+  );
+};
 
 export const MealsPage = () => {
   const { isManager } = useAuth();
@@ -66,11 +135,12 @@ export const MealsPage = () => {
   }, [selectedDate, meals, activeMembers.length]);
 
   const handleUnitChange = (memberId, mealType, val) => {
+    const num = Number(val);
     setMatrixEntries((prev) => ({
       ...prev,
       [memberId]: {
         ...prev[memberId],
-        [mealType]: parseFloat(val) || 0
+        [mealType]: isNaN(num) ? 0 : Math.max(0, Math.round(num * 100) / 100)
       }
     }));
   };
@@ -120,7 +190,12 @@ export const MealsPage = () => {
       unitTotal += calculateMealUnits(entry, mess || {});
     });
 
-    return { bTotal, lTotal, dTotal, unitTotal };
+    return {
+      bTotal: Number(bTotal.toFixed(2)),
+      lTotal: Number(lTotal.toFixed(2)),
+      dTotal: Number(dTotal.toFixed(2)),
+      unitTotal: Number(unitTotal.toFixed(2))
+    };
   }, [matrixEntries, activeMembers, mess]);
 
   return (
@@ -247,7 +322,7 @@ export const MealsPage = () => {
 
           <div className="flex items-center gap-3 text-xs">
             <span className="font-semibold text-slate-700">
-              Total Day Units: <strong className="text-emerald-700 font-mono text-sm">{daySummary.unitTotal.toFixed(1)}</strong>
+              Total Day Units: <strong className="text-emerald-700 font-mono text-sm">{daySummary.unitTotal.toFixed(2)}</strong>
             </span>
           </div>
         </div>
@@ -279,54 +354,36 @@ export const MealsPage = () => {
                       {member.room_number || '-'}
                     </td>
 
-                    {/* Breakfast Selector */}
+                    {/* Breakfast Stepper */}
                     <td className="py-3 px-3 text-center">
-                      <select
+                      <MealUnitStepper
                         disabled={!isManager}
                         value={entry.breakfast}
-                        onChange={(e) => handleUnitChange(member.id, 'breakfast', e.target.value)}
-                        className="text-xs border border-slate-200 rounded-lg p-1.5 font-mono text-center bg-white focus:border-emerald-500 focus:outline-none disabled:bg-slate-100"
-                      >
-                        <option value="0">0 (Off)</option>
-                        <option value="0.5">0.5 (Half)</option>
-                        <option value="1">1 (Full)</option>
-                        <option value="2">2 (Guest)</option>
-                      </select>
+                        onChange={(val) => handleUnitChange(member.id, 'breakfast', val)}
+                      />
                     </td>
 
-                    {/* Lunch Selector */}
+                    {/* Lunch Stepper */}
                     <td className="py-3 px-3 text-center">
-                      <select
+                      <MealUnitStepper
                         disabled={!isManager}
                         value={entry.lunch}
-                        onChange={(e) => handleUnitChange(member.id, 'lunch', e.target.value)}
-                        className="text-xs border border-slate-200 rounded-lg p-1.5 font-mono text-center bg-white focus:border-emerald-500 focus:outline-none disabled:bg-slate-100"
-                      >
-                        <option value="0">0 (Off)</option>
-                        <option value="0.5">0.5 (Half)</option>
-                        <option value="1">1 (Full)</option>
-                        <option value="2">2 (Guest)</option>
-                      </select>
+                        onChange={(val) => handleUnitChange(member.id, 'lunch', val)}
+                      />
                     </td>
 
-                    {/* Dinner Selector */}
+                    {/* Dinner Stepper */}
                     <td className="py-3 px-3 text-center">
-                      <select
+                      <MealUnitStepper
                         disabled={!isManager}
                         value={entry.dinner}
-                        onChange={(e) => handleUnitChange(member.id, 'dinner', e.target.value)}
-                        className="text-xs border border-slate-200 rounded-lg p-1.5 font-mono text-center bg-white focus:border-emerald-500 focus:outline-none disabled:bg-slate-100"
-                      >
-                        <option value="0">0 (Off)</option>
-                        <option value="0.5">0.5 (Half)</option>
-                        <option value="1">1 (Full)</option>
-                        <option value="2">2 (Guest)</option>
-                      </select>
+                        onChange={(val) => handleUnitChange(member.id, 'dinner', val)}
+                      />
                     </td>
 
                     {/* Total units for this member today */}
                     <td className="py-3 px-4 text-center font-mono font-bold text-emerald-700">
-                      {units.toFixed(1)}
+                      {units.toFixed(2)}
                     </td>
 
                     {/* Notes input */}
@@ -362,7 +419,7 @@ export const MealsPage = () => {
                 <td className="py-3 px-3 text-center font-mono">{daySummary.lTotal}</td>
                 <td className="py-3 px-3 text-center font-mono">{daySummary.dTotal}</td>
                 <td className="py-3 px-4 text-center font-mono text-emerald-700 text-sm">
-                  {daySummary.unitTotal.toFixed(1)} units
+                  {daySummary.unitTotal.toFixed(2)} units
                 </td>
                 <td className="py-3 px-4"></td>
               </tr>
