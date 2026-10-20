@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Save,
@@ -23,6 +23,7 @@ export const SettingsPage = () => {
 
   const [form, setForm] = useState({
     name: mess?.name || 'Padma Hall Mess (Dhaka University)',
+    subtitle: mess?.subtitle || 'চলতি মাসের হিসাব',
     address: mess?.address || 'Room 402, Shahidullah Hall Extension, Curzon Hall, Dhaka',
     currency: mess?.currency || 'BDT',
     month_start_day: mess?.month_start_day || 1,
@@ -32,6 +33,24 @@ export const SettingsPage = () => {
     shared_expense_policy: mess?.shared_expense_policy || 'equal',
     invite_code: mess?.invite_code || 'PADMA2026'
   });
+
+  useEffect(() => {
+    if (mess) {
+      setForm((prev) => ({
+        ...prev,
+        name: mess.name || prev.name,
+        subtitle: mess.subtitle || prev.subtitle || 'চলতি মাসের হিসাব',
+        address: mess.address || prev.address,
+        currency: mess.currency || prev.currency,
+        month_start_day: mess.month_start_day || prev.month_start_day,
+        breakfast_unit: Number(mess.breakfast_unit ?? prev.breakfast_unit),
+        lunch_unit: mess.lunch_unit ?? prev.lunch_unit,
+        dinner_unit: mess.dinner_unit ?? prev.dinner_unit,
+        shared_expense_policy: mess.shared_expense_policy || prev.shared_expense_policy,
+        invite_code: mess.invite_code || prev.invite_code
+      }));
+    }
+  }, [mess]);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -107,6 +126,18 @@ export const SettingsPage = () => {
               disabled={!isManager}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none disabled:bg-slate-50 font-semibold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Subtitle / Tagline (উপ-শিরোনাম)</label>
+            <input
+              type="text"
+              disabled={!isManager}
+              value={form.subtitle}
+              onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+              placeholder="e.g. চলতি মাসের হিসাব"
               className="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-emerald-500 focus:outline-none disabled:bg-slate-50"
             />
           </div>

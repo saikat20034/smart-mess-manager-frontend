@@ -42,7 +42,8 @@ export const DashboardPage = () => {
     members,
     mess,
     addDeposit,
-    bazarSchedule
+    bazarSchedule,
+    updateMessSettings
   } = useMess();
 
   // Modals state
@@ -56,6 +57,40 @@ export const DashboardPage = () => {
     transaction_ref: '',
     notes: ''
   });
+
+  // Change Mess Name Modal state
+  const [editMessNameOpen, setEditMessNameOpen] = useState(false);
+  const [newMessName, setNewMessName] = useState('');
+  const [newMessSubtitle, setNewMessSubtitle] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [nameSaveSuccess, setNameSaveSuccess] = useState(false);
+
+  const handleOpenEditMessName = () => {
+    setNewMessName(mess?.name || '');
+    setNewMessSubtitle(mess?.subtitle || (isBn ? 'চলতি মাসের হিসাব' : 'Current Month Summary'));
+    setEditMessNameOpen(true);
+  };
+
+  const handleSaveMessName = async (e) => {
+    e.preventDefault();
+    if (!newMessName.trim()) return;
+    setIsSavingName(true);
+    try {
+      await updateMessSettings({
+        name: newMessName.trim(),
+        subtitle: newMessSubtitle.trim()
+      });
+      setNameSaveSuccess(true);
+      setTimeout(() => {
+        setNameSaveSuccess(false);
+        setEditMessNameOpen(false);
+      }, 900);
+    } catch (err) {
+      console.error('Failed to update mess name:', err);
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   // Find logged-in user summary or default to first member (Saikat)
   const currentMember =
@@ -177,15 +212,34 @@ export const DashboardPage = () => {
         <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           {/* Dark Header */}
           <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold truncate max-w-[200px]">
-                {mess?.name || 'আপাতত নাম নাই, ...'}
-              </h2>
+            <div className="flex-1 min-w-0 pr-2">
+              <div className="flex items-center gap-1.5 group">
+                <h2
+                  onClick={() => isManager && handleOpenEditMessName()}
+                  className={`text-sm font-bold truncate max-w-[200px] ${
+                    isManager ? 'cursor-pointer hover:text-rose-300 transition-colors' : ''
+                  }`}
+                  title={isManager ? (isBn ? 'মেসের নাম পরিবর্তন করতে ক্লিক করুন' : 'Click to change mess name') : mess?.name}
+                >
+                  {mess?.name || (isBn ? 'আপাতত নাম নাই, ...' : 'No name set')}
+                </h2>
+                {isManager && (
+                  <button
+                    type="button"
+                    onClick={handleOpenEditMessName}
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                    title={isBn ? 'মেসের নাম পরিবর্তন করুন' : 'Change Mess Name'}
+                    aria-label="Change Mess Name"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                {mess?.subtitle || 'চলতি মাসের হিসাব'}
+                {mess?.subtitle || (isBn ? 'চলতি মাসের হিসাব' : 'Current Month Summary')}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-emerald-400">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-emerald-400 shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>{t('running')}</span>
             </div>
@@ -735,6 +789,107 @@ export const DashboardPage = () => {
               জমা সম্পন্ন করুন
             </button>
           </div>
+        </form>
+      </Modal>
+
+      {/* Change Mess Name Modal */}
+      <Modal
+        isOpen={editMessNameOpen}
+        onClose={() => setEditMessNameOpen(false)}
+        title={isBn ? 'মেসের নাম পরিবর্তন করুন' : 'Change Mess Name'}
+        size="md"
+      >
+        <form onSubmit={handleSaveMessName} className="space-y-4">
+          {nameSaveSuccess ? (
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-emerald-800 text-xs font-medium">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>{isBn ? 'মেসের নাম সফলভাবে পরিবর্তন করা হয়েছে!' : 'Mess name updated successfully!'}</span>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {isBn ? 'মেসের নাম *' : 'Mess Name *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newMessName}
+                  onChange={(e) => setNewMessName(e.target.value)}
+                  placeholder={isBn ? 'যেমন: পদ্মা হল মেস, ঢাকা বিশ্ববিদ্যালয়' : 'e.g. Padma Hall Mess'}
+                  className="w-full text-sm rounded-xl border border-slate-200 p-2.5 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 font-semibold text-slate-900"
+                  autoFocus
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {isBn ? 'এই নামটি ড্যাশবোর্ড, ইনভাইট কার্ড, রিপোর্ট ও নোটিশে প্রদর্শিত হবে।' : 'This name will be displayed across dashboard, invites, and reports.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {isBn ? 'উপ-শিরোনাম / স্লোগান' : 'Subtitle / Tagline'}
+                </label>
+                <input
+                  type="text"
+                  value={newMessSubtitle}
+                  onChange={(e) => setNewMessSubtitle(e.target.value)}
+                  placeholder={isBn ? 'যেমন: চলতি মাসের হিসাব' : 'e.g. Current Month Summary'}
+                  className="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 text-slate-700"
+                />
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="bg-slate-900 text-white p-3.5 rounded-xl border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block mb-1.5">
+                  {isBn ? 'লাইভ প্রিভিউ' : 'Live Preview'}
+                </span>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 pr-2">
+                    <p className="text-sm font-bold text-white truncate max-w-[220px]">
+                      {newMessName.trim() || (isBn ? 'মেসের নাম' : 'Mess Name')}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                      {newMessSubtitle.trim() || (isBn ? 'চলতি মাসের হিসাব' : 'Current Month Summary')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-emerald-400 shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>{t('running')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <Link
+                  to="/settings"
+                  onClick={() => setEditMessNameOpen(false)}
+                  className="text-xs text-slate-500 hover:text-slate-800 underline transition-colors"
+                >
+                  {isBn ? 'সকল মেস সেটিংস দেখুন →' : 'View all mess settings →'}
+                </Link>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditMessNameOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  >
+                    {isBn ? 'বাতিল' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingName || !newMessName.trim()}
+                    className="px-4 py-2 text-xs font-semibold bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    {isSavingName ? (
+                      <span>{isBn ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}</span>
+                    ) : (
+                      <span>{isBn ? 'নাম সংরক্ষণ করুন' : 'Save Name'}</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </form>
       </Modal>
     </div>

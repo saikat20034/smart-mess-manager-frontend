@@ -8,6 +8,7 @@ import {
   CheckSquare,
   History,
   CalendarDays,
+  Settings,
   LogOut,
   X
 } from 'lucide-react';
@@ -34,7 +35,8 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { path: '/expenses', label: isManager ? t('addExpense') : (isBn ? 'খরচের তালিকা' : 'Expenses List'), icon: ShoppingCart },
     { path: '/bazar-planner', label: t('bazarRoster'), icon: CheckSquare },
     { path: '/previous-month', label: t('previousMonth'), icon: History },
-    { path: '/all-months', label: t('allMonths'), icon: CalendarDays }
+    { path: '/all-months', label: t('allMonths'), icon: CalendarDays },
+    { path: '/settings', label: isBn ? 'মেস সেটিংস' : 'Mess Settings', icon: Settings }
   ];
 
   const handleLogout = () => {
