@@ -256,6 +256,14 @@ export const MessProvider = ({ children }) => {
     return `${enMonths[mIdx] || ''} ${y}`;
   };
 
+  const deleteMonth = async (monthYear) => {
+    await dataService.deleteMonth(monthYear);
+    if (selectedMonth === monthYear) {
+      setSelectedMonth(currentMonthYear);
+    }
+    await refreshData();
+  };
+
   return (
     <MessContext.Provider
       value={{
@@ -305,7 +313,8 @@ export const MessProvider = ({ children }) => {
         addBazarScheduleEntry,
         saveMealRequest,
         createNewMess,
-        resetAllDemoData
+        resetAllDemoData,
+        deleteMonth
       }}
     >
       {children}

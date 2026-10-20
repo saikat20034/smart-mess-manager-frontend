@@ -343,7 +343,7 @@ export const dataService = {
   },
 
   async finalizeSettlement(settlementData) {
-    const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, []);
+    const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
     const record = {
       id: `set-${Date.now()}`,
       is_finalized: true,
@@ -358,6 +358,46 @@ export const dataService = {
       `মিল রেট: ৳ ${settlementData.mealRate}`
     );
     return record;
+  },
+
+  async deleteMonth(monthYear) {
+    if (!monthYear) return false;
+
+    // Filter out meals for that month
+    const meals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
+    const updatedMeals = meals.filter((m) => !m.date || !m.date.startsWith(monthYear));
+    setLocalItem(STORAGE_KEYS.MEALS, updatedMeals);
+
+    // Filter out expenses for that month
+    const expenses = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
+    const updatedExpenses = expenses.filter((e) => !e.date || !e.date.startsWith(monthYear));
+    setLocalItem(STORAGE_KEYS.EXPENSES, updatedExpenses);
+
+    // Filter out deposits for that month
+    const deposits = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
+    const updatedDeposits = deposits.filter((d) => !d.date || !d.date.startsWith(monthYear));
+    setLocalItem(STORAGE_KEYS.DEPOSITS, updatedDeposits);
+
+    // Filter out settlements for that month
+    const [yStr, mStr] = monthYear.split('-');
+    const yNum = parseInt(yStr, 10);
+    const mNum = parseInt(mStr, 10);
+
+    const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
+    const updatedSettlements = settlements.filter((s) => {
+      if (s.monthYear && s.monthYear === monthYear) return false;
+      if (s.year === yNum && s.month === mNum) return false;
+      return true;
+    });
+    setLocalItem(STORAGE_KEYS.SETTLEMENTS, updatedSettlements);
+
+    this.logActivity(
+      'DELETE_MONTH',
+      `সম্পূর্ণ মাসের হিসাব মুছে ফেলা হয়েছে: ${monthYear}`,
+      `মিল, খরচ, ডিপোজিট এবং সেটেলমেন্ট রেকর্ডসমূহ স্থায়ীভাবে মুছে ফেলা হয়েছে`
+    );
+
+    return true;
   },
 
   // Bazar Checklist (বাজারের ফর্দ)
