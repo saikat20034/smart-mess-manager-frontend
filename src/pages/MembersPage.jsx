@@ -24,6 +24,7 @@ import { Badge } from '../components/Badge';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TransferManagerModal } from '../components/TransferManagerModal';
+import { Avatar } from '../components/Avatar';
 
 export const MembersPage = () => {
   const { isManager } = useAuth();
@@ -228,21 +229,17 @@ export const MembersPage = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  {member.avatar ? (
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className={`w-10 h-10 rounded-full object-cover shadow-2xs shrink-0 ${
-                        isCurrentLead
-                          ? 'border-2 border-amber-500 ring-2 ring-amber-400/20'
-                          : 'border border-slate-200 dark:border-slate-700'
-                      }`}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-sm shrink-0">
-                      {member.name.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar
+                    src={member.avatar}
+                    name={member.name}
+                    size="lg"
+                    border={false}
+                    className={`shadow-2xs shrink-0 ${
+                      isCurrentLead
+                        ? 'border-2 border-amber-500 ring-2 ring-amber-400/20'
+                        : 'border border-slate-200 dark:border-slate-700'
+                    }`}
+                  />
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate">
                       <span>{member.name}</span>

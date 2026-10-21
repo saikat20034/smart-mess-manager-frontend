@@ -31,6 +31,7 @@ import { BazarRosterModal } from '../components/BazarRosterModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { InviteShareCard } from '../components/InviteShareCard';
 import { Modal } from '../components/Modal';
+import { Avatar } from '../components/Avatar';
 
 export const DashboardPage = () => {
   const { user, isManager } = useAuth();
@@ -213,17 +214,13 @@ export const DashboardPage = () => {
           {/* Dark Header */}
           <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-              {mess?.logo ? (
-                <img
-                  src={mess.logo}
-                  alt={mess?.name || 'Mess Logo'}
-                  className="w-9 h-9 rounded-full border border-rose-400 object-cover shrink-0 shadow-xs"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-xs">
-                  {mess?.name ? mess.name.trim().charAt(0).toUpperCase() : 'M'}
-                </div>
-              )}
+              <Avatar
+                src={mess?.logo}
+                name={mess?.name || 'Mess'}
+                size="md"
+                border={false}
+                className="border border-rose-400"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 group">
                   <h2
@@ -561,17 +558,13 @@ export const DashboardPage = () => {
                   {/* Card Header: Avatar, Name, Status Pill, Balance */}
                   <div className="flex items-start justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      {member.avatar ? (
-                        <img
-                          src={member.avatar}
-                          alt={member.name}
-                          className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
-                          {member.name.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
+                      <Avatar
+                        src={member.avatar}
+                        name={member.name}
+                        size="lg"
+                        border={false}
+                        className="border border-slate-200 dark:border-slate-700 shadow-2xs"
+                      />
                       <div>
                         <h4 className="text-xs font-bold text-slate-900">
                           {member.name}

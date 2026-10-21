@@ -63,7 +63,17 @@ function getLocalItem(key, fallback) {
     if (typeof localStorage === 'undefined') return getCleanFallback(key, fallback);
     const val = localStorage.getItem(key);
     if (val !== null && val !== undefined) {
-      return JSON.parse(val);
+      const parsed = JSON.parse(val);
+      // Auto-sanitize broken random unsplash avatars for members
+      if (key === STORAGE_KEYS.MEMBERS && Array.isArray(parsed)) {
+        return parsed.map((m) => {
+          if (m?.avatar && m.avatar.includes('photo-1535713875') && m.avatar !== 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop') {
+            return { ...m, avatar: '' };
+          }
+          return m;
+        });
+      }
+      return parsed;
     }
     return getCleanFallback(key, fallback);
   } catch (e) {

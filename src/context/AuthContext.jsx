@@ -39,7 +39,15 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      if (parsed) return parsed;
+      if (parsed) {
+        if (parsed.avatar && parsed.avatar.includes('photo-1535713875') && parsed.avatar !== 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop') {
+          parsed.avatar = '';
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('smm_auth_user_v2', JSON.stringify(parsed));
+          }
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error('Error reading auth user:', e);
     }
@@ -355,7 +363,7 @@ export const AuthProvider = ({ children }) => {
           email,
           phone,
           role,
-          avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`
+          avatar: ''
         };
         setUser(newUser);
         return { success: true, user: newUser };
@@ -366,7 +374,7 @@ export const AuthProvider = ({ children }) => {
           email,
           phone,
           role,
-          avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`
+          avatar: ''
         };
         setUser(newUser);
         return { success: true, user: newUser };

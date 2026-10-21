@@ -26,6 +26,7 @@ import { Badge } from './Badge';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfilePictureModal } from './ProfilePictureModal';
 import { MessProfilePictureModal } from './MessProfilePictureModal';
+import { Avatar } from './Avatar';
 
 export const Navbar = ({ onToggleSidebar }) => {
   const { user, isManager, switchRole, logout, isDemoMode } = useAuth();
@@ -220,17 +221,12 @@ export const Navbar = ({ onToggleSidebar }) => {
               <span className="hidden sm:inline text-xs font-bold text-slate-800 dark:text-slate-200">
                 {displayName}
               </span>
-              {activeUser?.avatar ? (
-                <img
-                  src={activeUser.avatar}
-                  alt={displayName}
-                  className="w-8 h-8 rounded-full border-2 border-rose-500 object-cover shadow-xs"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-xs">
-                  {displayInitial}
-                </div>
-              )}
+              <Avatar
+                src={activeUser?.avatar}
+                name={displayName}
+                size="sm"
+                border={true}
+              />
             </button>
 
             {profileOpen && (

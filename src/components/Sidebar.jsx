@@ -18,6 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfilePictureModal } from './ProfilePictureModal';
+import { Avatar } from './Avatar';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, isAdmin, logout } = useAuth();
@@ -159,17 +160,13 @@ export const Sidebar = ({ isOpen, onClose }) => {
             className="flex items-center gap-2.5 text-left group cursor-pointer hover:opacity-90 transition-opacity"
             title={isBn ? "প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change profile picture"}
           >
-            {activeUser?.avatar ? (
-              <img
-                src={activeUser.avatar}
-                alt={displayName}
-                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover group-hover:ring-2 group-hover:ring-rose-400 transition-all"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-xs group-hover:ring-2 group-hover:ring-rose-400 transition-all">
-                {displayInitial}
-              </div>
-            )}
+            <Avatar
+              src={activeUser?.avatar}
+              name={displayName}
+              size="sm"
+              border={false}
+              className="border border-slate-200 dark:border-slate-700 group-hover:ring-2 group-hover:ring-rose-400 transition-all"
+            />
             <div>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate max-w-[85px]">
                 {displayName}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Crown, AlertTriangle, ArrowRight, ShieldCheck, UserCheck, Check } from 'lucide-react';
 import { Modal } from './Modal';
+import { Avatar } from './Avatar';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -98,17 +99,13 @@ export const TransferManagerModal = ({ isOpen, onClose, preselectedMemberId = nu
               {isBn ? 'বর্তমান ম্যানেজার' : 'Current Manager'}
             </span>
             <div className="flex items-center gap-2.5">
-              {currentManager?.avatar ? (
-                <img
-                  src={currentManager.avatar}
-                  alt={currentManager.name}
-                  className="w-9 h-9 rounded-full object-cover border border-amber-400 shadow-2xs"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-xs">
-                  {currentManager?.name ? currentManager.name.slice(0, 2).toUpperCase() : 'M'}
-                </div>
-              )}
+              <Avatar
+                src={currentManager?.avatar}
+                name={currentManager?.name || 'Saikat'}
+                size="md"
+                border={false}
+                className="border border-amber-400 shadow-2xs"
+              />
               <div className="min-w-0 flex-1">
                 <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                   {currentManager?.name || 'Saikat'}
@@ -127,17 +124,13 @@ export const TransferManagerModal = ({ isOpen, onClose, preselectedMemberId = nu
               {isBn ? 'নতুন দায়িত্বপ্রাপ্ত ম্যানেজার' : 'Incoming New Manager'}
             </span>
             <div className="flex items-center gap-2.5">
-              {targetMember?.avatar ? (
-                <img
-                  src={targetMember.avatar}
-                  alt={targetMember.name}
-                  className="w-9 h-9 rounded-full object-cover border border-emerald-500 shadow-2xs"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
-                  {targetMember?.name ? targetMember.name.slice(0, 2).toUpperCase() : '?'}
-                </div>
-              )}
+              <Avatar
+                src={targetMember?.avatar}
+                name={targetMember?.name || '?'}
+                size="md"
+                border={false}
+                className="border border-emerald-500 shadow-2xs"
+              />
               <div className="min-w-0 flex-1">
                 <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                   {targetMember?.name || (isBn ? 'মেম্বার বাছাই করুন' : 'Select member')}

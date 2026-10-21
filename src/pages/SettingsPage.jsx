@@ -22,6 +22,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
 import { TransferManagerModal } from '../components/TransferManagerModal';
+import { Avatar } from '../components/Avatar';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
@@ -131,17 +132,12 @@ export const SettingsPage = () => {
           {/* Mess Logo / Profile Picture Row */}
           <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
             <div className="relative shrink-0">
-              {mess?.logo ? (
-                <img
-                  src={mess.logo}
-                  alt={mess?.name || 'Mess Logo'}
-                  className="w-14 h-14 rounded-full border-2 border-rose-500 object-cover shadow-xs"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-xl shadow-xs">
-                  {form.name ? form.name.trim().charAt(0).toUpperCase() : 'M'}
-                </div>
-              )}
+              <Avatar
+                src={mess?.logo}
+                name={form.name || 'M'}
+                size="xl"
+                border={true}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -246,17 +242,13 @@ export const SettingsPage = () => {
 
           <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {currentManager?.avatar ? (
-                <img
-                  src={currentManager.avatar}
-                  alt={currentManager.name}
-                  className="w-12 h-12 rounded-full border-2 border-amber-500 object-cover shadow-xs"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-base shadow-xs">
-                  {currentManager?.name ? currentManager.name.slice(0, 2).toUpperCase() : 'M'}
-                </div>
-              )}
+              <Avatar
+                src={currentManager?.avatar}
+                name={currentManager?.name || 'Saikat'}
+                size="xl"
+                border={false}
+                className="w-12 h-12 border-2 border-amber-500 shadow-xs"
+              />
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <span>{currentManager?.name || 'Saikat'}</span>
