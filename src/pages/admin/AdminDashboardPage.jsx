@@ -212,7 +212,7 @@ export const AdminDashboardPage = () => {
               <span>মাস্টার সিস্টেম কন্ট্রোল সক্রিয়</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              স্বাগতম, সুপার অ্যাডমিন সাইকাত!
+              স্বাগতম, সুপার অ্যাডমিন!
             </h1>
             <p className="text-xs sm:text-sm text-slate-400">
               এখান থেকে আপনি অ্যাপের সকল সক্রিয় মেস, মেম্বার সংখ্যা, কোন তারিখে মেস শুরু হয়েছে, এবং সামগ্রিক পরিসংখ্যান দেখতে পাচ্ছেন।
