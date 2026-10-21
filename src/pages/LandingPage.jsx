@@ -19,6 +19,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { formatBDT } from '../utils/calculations';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { HeroCarousel } from '../components/HeroCarousel';
+import { Footer } from '../components/Footer';
 
 export const LandingPage = () => {
   const { loginAsManager, loginAsMember } = useAuth();
@@ -147,6 +149,9 @@ export const LandingPage = () => {
           <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
             No credit card needed • Ready for bKash, Nagad & Bangladeshi Taka (৳)
           </p>
+
+          {/* Interactive Hero Carousel with Curated Images */}
+          <HeroCarousel onLaunchDemo={handleLaunchDemo} />
         </div>
       </section>
 
@@ -419,36 +424,8 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 py-12 border-t border-slate-800 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-bold text-white text-sm">Smart Mess Manager</span>
-              <span className="text-[11px] text-slate-400 block">Designed for Bangladeshi Students</span>
-            </div>
-          </div>
-
-          <p className="text-slate-400 text-center md:text-left">
-            Built with React, Vite, Tailwind CSS, Supabase & Recharts. Currency: Bangladeshi Taka (৳ BDT).
-          </p>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => handleLaunchDemo('manager')}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer"
-            >
-              Launch Demo
-            </button>
-            <Link to="/login" className="text-xs text-slate-300 hover:text-white">
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </footer>
+      {/* Production-Level Multi-Column Footer */}
+      <Footer onLaunchDemo={handleLaunchDemo} />
     </div>
   );
 };
