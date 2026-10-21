@@ -156,6 +156,17 @@ describe('Single Manager Invariant & Role Transfer', () => {
       superAdmin.email === 'mazharulislamsaikat2000gmail.com'
     );
     expect(isSuperAdmin).toBe(true);
+
+    // MBSTU Super Admin email
+    const mbstuAdmin = {
+      id: 'mem-mbstu',
+      name: 'Saikat (MBSTU Admin)',
+      email: 'it24647@mbstu.ac.bd'
+    };
+    const isMbstuAdmin = Boolean(
+      mbstuAdmin.email === 'it24647@mbstu.ac.bd'
+    );
+    expect(isMbstuAdmin).toBe(true);
   });
 });
 

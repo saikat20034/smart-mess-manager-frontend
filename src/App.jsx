@@ -25,6 +25,8 @@ import { BazarPlannerPage } from './pages/BazarPlannerPage';
 import { PreviousMonthPage } from './pages/PreviousMonthPage';
 import { AllMonthsPage } from './pages/AllMonthsPage';
 import { DatabaseViewerPage } from './pages/DatabaseViewerPage';
+import { AdminLoginPage } from './pages/admin/AdminLoginPage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { NotFoundPage, UnauthorizedPage } from './pages/NotFoundPage';
 
 // Protected Route Guard
@@ -34,6 +36,21 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
   return children;
+};
+
+// Super Admin Route Guard
+const AdminProtectedRoute = ({ children }) => {
+  const { isSuperAdminAuthenticated } = useAuth();
+  if (!isSuperAdminAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return children;
+};
+
+// Direct /admin Route: Shows AdminLoginPage if not logged in, or AdminDashboardPage if logged in
+const AdminIndexRoute = () => {
+  const { isSuperAdminAuthenticated } = useAuth();
+  return isSuperAdminAuthenticated ? <Navigate to="/admin/dashboard" replace /> : <AdminLoginPage />;
 };
 
 export function App() {
@@ -73,6 +90,18 @@ export function App() {
                 <Route path="/all-months" element={<AllMonthsPage />} />
                 <Route path="/database" element={<DatabaseViewerPage />} />
               </Route>
+
+              {/* Super Admin Routes */}
+              <Route path="/admin" element={<AdminIndexRoute />} />
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminDashboardPage />
+                  </AdminProtectedRoute>
+                }
+              />
 
               {/* Error Pages */}
               <Route path="/unauthorized" element={<UnauthorizedPage />} />

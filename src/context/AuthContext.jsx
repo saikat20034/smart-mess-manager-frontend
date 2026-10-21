@@ -92,24 +92,70 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Dedicated Super Admin Portal Session (/admin)
+  const [superAdmin, setSuperAdmin] = useState(() => {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      const raw = localStorage.getItem('smm_super_admin_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const loginSuperAdmin = async ({ email, password }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if (
+      (cleanEmail === 'it24647@mbstu.ac.bd' || cleanEmail === 'mazharulislamsaikat2000gmail.com') &&
+      (cleanPass === 'saikat20034' || cleanPass === 'admin2026')
+    ) {
+      const adminSession = {
+        email: cleanEmail,
+        name: 'Saikat (MBSTU Super Admin)',
+        role: 'super_admin',
+        token: `smm-adm-${Date.now()}`,
+        authenticated_at: new Date().toISOString()
+      };
+      setSuperAdmin(adminSession);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('smm_super_admin_session', JSON.stringify(adminSession));
+      }
+      return { success: true, admin: adminSession };
+    }
+    return {
+      success: false,
+      error: 'ভুল ইমেইল অথবা পাসওয়ার্ড! শুধুমাত্র অনুমোদিত সুপার অ্যাডমিন প্রবেশ করতে পারবেন।'
+    };
+  };
+
+  const logoutSuperAdmin = () => {
+    setSuperAdmin(null);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('smm_super_admin_session');
+    }
+  };
+
   // Single App Super Admin Invariant: Only 1 person is the admin for the entire application
   const isAdmin = Boolean(
-    user && (
+    superAdmin ||
+    (user && (
       user.role === 'admin' ||
       user.is_admin === true ||
-      (user.email && user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) ||
+      (user.email && (user.email.trim().toLowerCase() === 'it24647@mbstu.ac.bd' || user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase())) ||
       (typeof localStorage !== 'undefined' && localStorage.getItem('smm_super_admin_email') === user.email?.trim().toLowerCase())
-    )
+    ))
   );
 
   const verifyAdminKey = (secretKey) => {
     const key = (secretKey || '').trim();
-    if (key === 'admin2026' || key === 'mazharul2026' || key === 'saikat2026') {
+    if (key === 'admin2026' || key === 'saikat20034' || key === 'mazharul2026' || key === 'saikat2026') {
       const updatedUser = { ...(user || {}), is_admin: true };
       setUser(updatedUser);
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('smm_auth_user_v2', JSON.stringify(updatedUser));
-        localStorage.setItem('smm_super_admin_email', (user?.email || SUPER_ADMIN_EMAIL).toLowerCase());
+        localStorage.setItem('smm_super_admin_email', (user?.email || 'it24647@mbstu.ac.bd').toLowerCase());
       }
       return true;
     }
@@ -345,6 +391,10 @@ export const AuthProvider = ({ children }) => {
         isManager: user?.role === 'manager',
         isAdmin,
         verifyAdminKey,
+        superAdmin,
+        loginSuperAdmin,
+        logoutSuperAdmin,
+        isSuperAdminAuthenticated: Boolean(superAdmin),
         loading,
         login,
         register,
