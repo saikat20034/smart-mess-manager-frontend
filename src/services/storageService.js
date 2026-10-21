@@ -282,20 +282,48 @@ export const dataService = {
       const { data, error } = await supabase.from('mess_members').select('*').order('joined_at', { ascending: true });
       if (!error && data) return data;
     }
-    return getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
+    const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
+    // Enforce single manager invariant: at most one manager at any time
+    let managerFound = false;
+    let mutated = false;
+    const normalized = (members || []).map((m) => {
+      if (m.role === 'manager') {
+        if (!managerFound) {
+          managerFound = true;
+          return m;
+        } else {
+          mutated = true;
+          return { ...m, role: 'member' };
+        }
+      }
+      return m;
+    });
+    if (mutated) {
+      setLocalItem(STORAGE_KEYS.MEMBERS, normalized);
+    }
+    return normalized;
   },
 
   async addMember(memberData) {
+    const role = memberData.role || 'member';
     const newMember = {
       id: `mem-${Date.now()}`,
       joined_at: new Date().toISOString().split('T')[0],
       status: 'active',
-      role: memberData.role || 'member',
+      role,
       avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`,
       ...memberData
     };
 
     const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
+    if (role === 'manager') {
+      // Enforce single manager invariant: demote any existing manager
+      members.forEach((m, idx) => {
+        if (m.role === 'manager') {
+          members[idx] = { ...m, role: 'member' };
+        }
+      });
+    }
     members.push(newMember);
     setLocalItem(STORAGE_KEYS.MEMBERS, members);
     this.logActivity('ADD_MEMBER', `নতুন মেম্বার: ${newMember.name}`, `রুম: ${newMember.room_number || 'N/A'}`);
@@ -306,12 +334,53 @@ export const dataService = {
     const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
     const index = members.findIndex((m) => m.id === id);
     if (index !== -1) {
+      if (updates.role === 'manager') {
+        // Enforce single manager invariant: demote all other managers
+        members.forEach((m, idx) => {
+          if (idx !== index && m.role === 'manager') {
+            members[idx] = { ...m, role: 'member' };
+          }
+        });
+      }
       members[index] = { ...members[index], ...updates };
       setLocalItem(STORAGE_KEYS.MEMBERS, members);
       this.logActivity('UPDATE_MEMBER', `মেম্বার আপডেট: ${members[index].name}`, `স্ট্যাটাস: ${members[index].status}`);
       return members[index];
     }
     return null;
+  },
+
+  async transferManagerRole(newManagerId, currentManagerName = '') {
+    const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
+    const targetMember = members.find((m) => m.id === newManagerId);
+    if (!targetMember) return null;
+
+    let previousManager = null;
+    const updatedMembers = members.map((m) => {
+      if (m.id === newManagerId) {
+        return { ...m, role: 'manager' };
+      }
+      if (m.role === 'manager') {
+        previousManager = m;
+        return { ...m, role: 'member' };
+      }
+      return m;
+    });
+
+    setLocalItem(STORAGE_KEYS.MEMBERS, updatedMembers);
+
+    const prevName = previousManager?.name || currentManagerName || 'পূর্ববর্তী ম্যানেজার';
+    this.logActivity(
+      'TRANSFER_MANAGER',
+      `মেস ম্যানেজার পরিবর্তন: ${targetMember.name}`,
+      `${prevName} থেকে ${targetMember.name}-এর কাছে মেস পরিচালনার দায়িত্ব হস্তান্তর করা হয়েছে।`
+    );
+
+    return {
+      previousManager,
+      newManager: targetMember,
+      members: updatedMembers
+    };
   },
 
   async deactivateMember(id) {

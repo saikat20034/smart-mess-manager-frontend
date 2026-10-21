@@ -11,7 +11,8 @@ import {
   Edit3,
   ExternalLink,
   Tag,
-  Check
+  Check,
+  ShieldAlert
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -186,6 +187,20 @@ export const ExpensesPage = () => {
           </button>
         )}
       </div>
+
+      {!isManager && (
+        <div className="p-3.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
+          <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+          <div>
+            <span className="font-bold block text-slate-900 dark:text-white">
+              শুধুমাত্র মেস ম্যানেজার খরচ যুক্ত ও সম্পাদনা করতে পারেন
+            </span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              মেম্বার হিসেবে আপনি খরচের সকল ভাউচার, ক্যাটাগরি এবং বিস্তারিত তালিকা স্বচ্ছতার সাথে পর্যবেক্ষণ করতে পারবেন।
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

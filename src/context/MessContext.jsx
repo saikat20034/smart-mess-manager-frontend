@@ -164,6 +164,12 @@ export const MessProvider = ({ children }) => {
     await refreshData();
   };
 
+  const transferManagerRole = async (newManagerId, currentManagerName = '') => {
+    const res = await dataService.transferManagerRole(newManagerId, currentManagerName);
+    await refreshData();
+    return res;
+  };
+
   const updateMessSettings = async (updates) => {
     await dataService.updateMess(updates);
     await refreshData();
@@ -269,6 +275,8 @@ export const MessProvider = ({ children }) => {
     await refreshData();
   };
 
+  const currentManager = (members || []).find((m) => m.role === 'manager') || members[0] || null;
+
   return (
     <MessContext.Provider
       value={{
@@ -285,6 +293,7 @@ export const MessProvider = ({ children }) => {
         formatMonthName,
         mess,
         members,
+        currentManager,
         categories,
         meals,
         expenses,
@@ -310,6 +319,7 @@ export const MessProvider = ({ children }) => {
         addMember,
         updateMember,
         deactivateMember,
+        transferManagerRole,
         updateMessSettings,
         finalizeMonthlySettlement,
         addBazarItem,

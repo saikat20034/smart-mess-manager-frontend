@@ -21,12 +21,13 @@ import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export const SettlementPage = () => {
-  const { isManager } = useAuth();
+  const { user, isManager } = useAuth();
   const {
     selectedMonth,
     metrics,
     memberBalances,
     settlements,
+    currentManager,
     finalizeMonthlySettlement
   } = useMess();
 
@@ -42,9 +43,11 @@ export const SettlementPage = () => {
     (s) => s.month === currentMonthNum && s.year === currentYearNum && s.is_finalized
   );
 
+  const managerDisplayName = user?.name || currentManager?.name || 'Mess Manager';
+
   const handleFinalize = async () => {
     await finalizeMonthlySettlement({
-      finalized_by_name: 'Tanvir Ahmed (Manager)'
+      finalized_by_name: `${managerDisplayName} (Manager)`
     });
     setFinalizeSuccess(true);
     setTimeout(() => setFinalizeSuccess(false), 4000);

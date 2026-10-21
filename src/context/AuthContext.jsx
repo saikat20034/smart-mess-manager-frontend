@@ -58,10 +58,51 @@ export const AuthProvider = ({ children }) => {
   // Switch role seamlessly
   const switchRole = (newRole) => {
     if (!user) return;
-    setUser((prev) => ({
-      ...prev,
-      role: newRole
-    }));
+    const updated = { ...user, role: newRole };
+    setUser(updated);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(updated));
+    }
+  };
+
+  // Demote active user to member when manager role is transferred
+  const demoteToMember = () => {
+    if (!user) return;
+    const updated = { ...user, role: 'member' };
+    setUser(updated);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(updated));
+    }
+    return updated;
+  };
+
+  // Promote active user to manager
+  const promoteToManager = () => {
+    if (!user) return;
+    const updated = { ...user, role: 'manager' };
+    setUser(updated);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(updated));
+    }
+    return updated;
+  };
+
+  // Switch session to another member in the roster
+  const loginAsMemberUser = (member) => {
+    if (!member) return;
+    const switchedUser = {
+      id: member.id || member.memberId,
+      name: member.name,
+      email: member.email || `${member.name.toLowerCase().replace(/\s+/g, '')}@mess.ac.bd`,
+      phone: member.phone || '',
+      role: member.role || 'member',
+      avatar: member.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+    };
+    setUser(switchedUser);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('smm_auth_user_v2', JSON.stringify(switchedUser));
+    }
+    return switchedUser;
   };
 
   // Update avatar
@@ -172,6 +213,9 @@ export const AuthProvider = ({ children }) => {
         logout,
         loginAsManager,
         loginAsMember,
+        loginAsMemberUser,
+        demoteToMember,
+        promoteToManager,
         switchRole,
         updateAvatar,
         updateUserProfile,

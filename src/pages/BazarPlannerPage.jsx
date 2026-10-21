@@ -44,7 +44,7 @@ export const BazarPlannerPage = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name) return;
+    if (!isManager || !form.name) return;
 
     await addBazarItem({
       name: form.name,
@@ -59,6 +59,7 @@ export const BazarPlannerPage = () => {
 
   // Convert completed items into an actual expense
   const handleConvertToExpense = async (item) => {
+    if (!isManager) return;
     const mem = members.find((m) => m.name === item.buyer) || members[0];
     await addExpense({
       title: `${item.name} (${item.quantity})`,

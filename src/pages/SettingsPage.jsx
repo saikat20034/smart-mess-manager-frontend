@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Save,
@@ -12,19 +11,24 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  Crown,
+  ShieldAlert
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
+import { TransferManagerModal } from '../components/TransferManagerModal';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
-  const { mess, updateMessSettings } = useMess();
+  const { mess, updateMessSettings, currentManager } = useMess();
   const { theme, setTheme } = useTheme();
   const { isBn } = useLanguage();
+
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: mess?.name || 'Padma Hall Mess (Dhaka University)',
@@ -219,6 +223,71 @@ export const SettingsPage = () => {
           </div>
         </div>
 
+        {/* Mess Administration & Sole Manager Authority */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {isBn ? 'মেস প্রশাসন ও একক ম্যানেজার' : 'Mess Administration & Sole Manager'}
+              </h3>
+            </div>
+            <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800/80 px-2.5 py-0.5 rounded-full">
+              {isBn ? 'একক ক্ষমতা নীতি' : 'Single Manager Invariant'}
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {isBn
+              ? 'মেসের নিয়ম অনুযায়ী এক সময়ে কেবল একজনই মেস ম্যানেজার দায়িত্ব পালন করতে পারেন। বর্তমান ম্যানেজার চাইলে অন্য যেকোনো সক্রিয় সদস্যকে এই দায়িত্ব হস্তান্তর করতে পারেন।'
+              : 'Strict single manager rule is active. Only the active manager possesses authority to edit mess data, logs, and settings. Leadership can be transferred anytime.'}
+          </p>
+
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {currentManager?.avatar ? (
+                <img
+                  src={currentManager.avatar}
+                  alt={currentManager.name}
+                  className="w-12 h-12 rounded-full border-2 border-amber-500 object-cover shadow-xs"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-base shadow-xs">
+                  {currentManager?.name ? currentManager.name.slice(0, 2).toUpperCase() : 'M'}
+                </div>
+              )}
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span>{currentManager?.name || 'Saikat'}</span>
+                  <Crown className="w-3.5 h-3.5 text-amber-500" />
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {currentManager?.phone || 'ফোন নম্বর নাই'} • Room: {currentManager?.room_number || currentManager?.roomNumber || 'N/A'}
+                </p>
+                <span className="inline-block mt-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                  {isBn ? 'বর্তমান দায়িত্বপ্রাপ্ত মেস ম্যানেজার' : 'Active Sole Mess Manager'}
+                </span>
+              </div>
+            </div>
+
+            {isManager ? (
+              <button
+                type="button"
+                onClick={() => setTransferModalOpen(true)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
+              >
+                <Crown className="w-4 h-4" />
+                <span>{isBn ? 'ম্যানেজার পরিবর্তন করুন' : 'Transfer Leadership'}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>{isBn ? 'শুধুমাত্র বর্তমান ম্যানেজার দায়িত্ব হস্তান্তর করতে পারেন।' : 'Only current manager can transfer role.'}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Meal Weight Configuration */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
@@ -387,6 +456,11 @@ export const SettingsPage = () => {
       <MessProfilePictureModal
         isOpen={messLogoModalOpen}
         onClose={() => setMessLogoModalOpen(false)}
+      />
+
+      <TransferManagerModal
+        isOpen={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
       />
     </div>
   );
