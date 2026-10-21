@@ -29,7 +29,7 @@ import { MessProfilePictureModal } from './MessProfilePictureModal';
 
 export const Navbar = ({ onToggleSidebar }) => {
   const { user, isManager, switchRole, logout, isDemoMode } = useAuth();
-  const { selectedMonth, setSelectedMonth, mess, refreshData, resetAllDemoData } = useMess();
+  const { selectedMonth, setSelectedMonth, mess, members, currentManager, refreshData, resetAllDemoData } = useMess();
   const { lang, toggleLanguage, t, isBn } = useLanguage();
   const { liveTimeStr, liveDateShort } = useLiveClock(isBn);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -40,6 +40,29 @@ export const Navbar = ({ onToggleSidebar }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Resolve active profile accurately, prioritizing actual mess members over stale demo defaults
+  const activeUser = React.useMemo(() => {
+    // If user has a real custom email (not placeholder saikat@mess.ac.bd)
+    if (user && user.email && user.email !== 'saikat@mess.ac.bd') return user;
+
+    // If user has saikat@mess.ac.bd or is missing, check if mess has real members
+    if (members && members.length > 0) {
+      const realMember = members.find(
+        (m) => m.id === user?.id || (m.email && m.email.toLowerCase() === user?.email?.toLowerCase())
+      );
+      if (realMember) return realMember;
+      if (currentManager && currentManager.email !== 'saikat@mess.ac.bd') {
+        return currentManager;
+      }
+      return members[0];
+    }
+    return user;
+  }, [user, members, currentManager]);
+
+  const displayName = activeUser?.name || 'User';
+  const displayEmail = activeUser?.email || activeUser?.phone || '';
+  const displayInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -195,17 +218,17 @@ export const Navbar = ({ onToggleSidebar }) => {
               title={isBn ? "ব্যক্তিগত প্রোফাইল মেনু" : "Personal Profile Menu"}
             >
               <span className="hidden sm:inline text-xs font-bold text-slate-800 dark:text-slate-200">
-                {user?.name || 'Saikat'}
+                {displayName}
               </span>
-              {user?.avatar ? (
+              {activeUser?.avatar ? (
                 <img
-                  src={user.avatar}
-                  alt={user?.name || 'User'}
+                  src={activeUser.avatar}
+                  alt={displayName}
                   className="w-8 h-8 rounded-full border-2 border-rose-500 object-cover shadow-xs"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-xs">
-                  {user?.name ? user.name.slice(0, 1).toUpperCase() : 'S'}
+                  {displayInitial}
                 </div>
               )}
             </button>
@@ -216,11 +239,11 @@ export const Navbar = ({ onToggleSidebar }) => {
                 onClick={() => setProfileOpen(false)}
               >
                 <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.name || 'Saikat'}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || 'saikat@mess.ac.bd'}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{displayName}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{displayEmail}</p>
                   <div className="mt-1">
-                    <Badge variant={isManager ? 'manager' : 'member'} size="sm">
-                      {isManager ? 'Mess Manager' : 'Mess Resident'}
+                    <Badge variant={activeUser?.role === 'manager' ? 'manager' : 'member'} size="sm">
+                      {activeUser?.role === 'manager' ? (isBn ? 'মেস ম্যানেজার' : 'Mess Manager') : (isBn ? 'মেস মেম্বার' : 'Mess Resident')}
                     </Badge>
                   </div>
                 </div>

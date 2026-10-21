@@ -4,10 +4,45 @@ import { isSupabaseConfigured, supabase } from '../services/supabase';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Default user: Saikat (Manager) as in user screenshot
+  // Initialize user, synchronizing with active mess members in storage
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('smm_auth_user_v2');
-    return saved ? JSON.parse(saved) : {
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_auth_user_v2') : null;
+      let parsed = saved ? JSON.parse(saved) : null;
+
+      const rawMembers = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_members_v2') : null;
+      if (rawMembers) {
+        const members = JSON.parse(rawMembers);
+        if (Array.isArray(members) && members.length > 0) {
+          // 1. If parsed user matches a member in this mess, use that member
+          if (parsed) {
+            const matched = members.find(
+              (m) =>
+                m.id === parsed.id ||
+                (m.email && m.email.toLowerCase() === parsed.email?.toLowerCase()) ||
+                (m.phone && m.phone === parsed.phone)
+            );
+            if (matched) return matched;
+          }
+
+          // 2. If parsed user is dummy Saikat but the mess has real members (e.g. Mazharul Islam):
+          // Automatically sync with the actual manager/member of this mess!
+          const activeManager = members.find((m) => m.role === 'manager') || members[0];
+          if (activeManager) {
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('smm_auth_user_v2', JSON.stringify(activeManager));
+            }
+            return activeManager;
+          }
+        }
+      }
+
+      if (parsed) return parsed;
+    } catch (e) {
+      console.error('Error reading auth user:', e);
+    }
+
+    return {
       id: 'mem-001',
       name: 'Saikat',
       email: 'saikat@mess.ac.bd',
@@ -18,6 +53,34 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  // Proactively sync user with active mess members if stored user is out-of-sync
+  useEffect(() => {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const rawMembers = localStorage.getItem('smm_members_v2');
+      if (rawMembers) {
+        const members = JSON.parse(rawMembers);
+        if (Array.isArray(members) && members.length > 0) {
+          const isMemberPresent = members.some(
+            (m) =>
+              m.id === user?.id ||
+              (m.email && m.email.toLowerCase() === user?.email?.toLowerCase())
+          );
+          // If the active user has the placeholder Saikat email, but the mess has real members:
+          if (!isMemberPresent || user?.email === 'saikat@mess.ac.bd') {
+            const realLeader = members.find((m) => m.role === 'manager') || members[0];
+            if (realLeader && realLeader.email !== 'saikat@mess.ac.bd') {
+              setUser(realLeader);
+              localStorage.setItem('smm_auth_user_v2', JSON.stringify(realLeader));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error synchronizing auth user:', e);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -143,9 +206,56 @@ export const AuthProvider = ({ children }) => {
         setUser(loggedUser);
         return { success: true, user: loggedUser };
       } else {
-        const isResident = email.toLowerCase().includes('member') || email.toLowerCase().includes('resident');
-        const simulatedUser = isResident ? loginAsMember() : loginAsManager();
-        return { success: true, user: simulatedUser };
+        const cleanInput = (email || '').trim().toLowerCase();
+        let storedMembers = [];
+        try {
+          const raw = localStorage.getItem('smm_members_v2');
+          if (raw) storedMembers = JSON.parse(raw);
+        } catch (e) {}
+
+        // 1. Look for existing member matching email, phone, or name
+        const matchedMember = storedMembers.find(
+          (m) =>
+            (m.email && m.email.trim().toLowerCase() === cleanInput) ||
+            (m.phone && m.phone.trim() === cleanInput) ||
+            (m.name && m.name.trim().toLowerCase() === cleanInput)
+        );
+
+        if (matchedMember) {
+          setUser(matchedMember);
+          localStorage.setItem('smm_auth_user_v2', JSON.stringify(matchedMember));
+          return { success: true, user: matchedMember };
+        }
+
+        // 2. Explicit demo logins
+        if (cleanInput.includes('demo-manager') || cleanInput === 'saikat@mess.ac.bd') {
+          return { success: true, user: loginAsManager() };
+        }
+        if (cleanInput.includes('demo-member') || cleanInput === 'shakib@mess.ac.bd') {
+          return { success: true, user: loginAsMember() };
+        }
+
+        // 3. Custom email / login (e.g. mazharulislamsaikat2000gmail.com)
+        const activeManager = storedMembers.find((m) => m.role === 'manager');
+        const isResident = cleanInput.includes('member') || cleanInput.includes('resident');
+        const role = isResident ? 'member' : (activeManager ? 'member' : 'manager');
+
+        // Extract clean readable name from email
+        let cleanName = (email || '').split('@')[0].replace(/[._0-9]/g, ' ').trim();
+        if (!cleanName) cleanName = 'User';
+        cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+
+        const customUser = {
+          id: `mem-${Date.now()}`,
+          name: cleanName,
+          email: email.trim(),
+          phone: '',
+          role,
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+        };
+        setUser(customUser);
+        localStorage.setItem('smm_auth_user_v2', JSON.stringify(customUser));
+        return { success: true, user: customUser };
       }
     } catch (err) {
       return { success: false, error: err.message };

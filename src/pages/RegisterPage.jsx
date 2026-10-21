@@ -84,11 +84,13 @@ export const RegisterPage = () => {
         } else {
           // Resident joins existing mess with invite code
           await addMember({
+            id: res.user.id,
             name: formData.name,
             phone: formData.phone,
             email: formData.email,
             role: 'member',
-            status: 'active'
+            status: 'active',
+            avatar: res.user.avatar
           });
         }
 

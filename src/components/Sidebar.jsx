@@ -26,10 +26,31 @@ export const Sidebar = ({ isOpen, onClose }) => {
     isCurrentMonth,
     switchToPreviousMonth,
     switchToCurrentMonth,
-    formatMonthName
+    formatMonthName,
+    members,
+    currentManager
   } = useMess();
   const navigate = useNavigate();
   const [profilePhotoModalOpen, setProfilePhotoModalOpen] = useState(false);
+
+  // Resolve active profile accurately, prioritizing actual mess members over stale demo defaults
+  const activeUser = React.useMemo(() => {
+    if (user && user.email && user.email !== 'saikat@mess.ac.bd') return user;
+    if (members && members.length > 0) {
+      const realMember = members.find(
+        (m) => m.id === user?.id || (m.email && m.email.toLowerCase() === user?.email?.toLowerCase())
+      );
+      if (realMember) return realMember;
+      if (currentManager && currentManager.email !== 'saikat@mess.ac.bd') {
+        return currentManager;
+      }
+      return members[0];
+    }
+    return user;
+  }, [user, members, currentManager]);
+
+  const displayName = activeUser?.name || 'User';
+  const displayInitial = displayName.trim().charAt(0).toUpperCase() || 'U';
 
   const navItems = [
     { path: '/dashboard', label: t('homePage'), icon: LayoutDashboard },
@@ -136,23 +157,23 @@ export const Sidebar = ({ isOpen, onClose }) => {
             className="flex items-center gap-2.5 text-left group cursor-pointer hover:opacity-90 transition-opacity"
             title={isBn ? "প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change profile picture"}
           >
-            {user?.avatar ? (
+            {activeUser?.avatar ? (
               <img
-                src={user.avatar}
-                alt={user?.name || 'User'}
+                src={activeUser.avatar}
+                alt={displayName}
                 className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover group-hover:ring-2 group-hover:ring-rose-400 transition-all"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-xs group-hover:ring-2 group-hover:ring-rose-400 transition-all">
-                {user?.name ? user.name.slice(0, 1).toUpperCase() : 'S'}
+                {displayInitial}
               </div>
             )}
             <div>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate max-w-[85px]">
-                {user?.name || (isManager ? 'Manager' : 'Member')}
+                {displayName}
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
-                {isManager ? 'Manager' : 'Member'}
+                {activeUser?.role === 'manager' ? (isBn ? 'ম্যানেজার' : 'Manager') : (isBn ? 'মেম্বার' : 'Member')}
               </span>
             </div>
           </button>

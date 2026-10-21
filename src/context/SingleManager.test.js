@@ -107,4 +107,25 @@ describe('Single Manager Invariant & Role Transfer', () => {
     expect(managers[0].id).toBe('mem-001');
     expect(normalizedMembers.find((m) => m.id === 'mem-002').role).toBe('member');
   });
+
+  it('preserves custom user identity (e.g. Mazharul Islam) and never reverts to demo Saikat', async () => {
+    const customUser = {
+      id: 'mem-mazharul',
+      name: 'Mazharul Islam',
+      email: 'mazharulislamsaikat2000gmail.com',
+      phone: '01630496007',
+      role: 'manager',
+      status: 'active'
+    };
+    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify([customUser]));
+    localStorage.setItem('smm_auth_user_v2', JSON.stringify(customUser));
+
+    const members = await dataService.getMembers();
+    expect(members.length).toBe(1);
+    expect(members[0].name).toBe('Mazharul Islam');
+    expect(members[0].email).toBe('mazharulislamsaikat2000gmail.com');
+    expect(members[0].phone).toBe('01630496007');
+    expect(members[0].role).toBe('manager');
+  });
 });
+

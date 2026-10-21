@@ -114,11 +114,29 @@ export function cleanDatabase(managerUser) {
       try {
         const savedAuth = localStorage.getItem('smm_auth_user_v2');
         if (savedAuth) {
-          activeManager = JSON.parse(savedAuth);
+          const parsed = JSON.parse(savedAuth);
+          if (parsed && parsed.email !== 'saikat@mess.ac.bd') {
+            activeManager = parsed;
+          }
         }
       } catch (e) {
         // fallback
       }
+    }
+
+    if (!activeManager) {
+      try {
+        const rawMembers = localStorage.getItem(STORAGE_KEYS.MEMBERS);
+        if (rawMembers) {
+          const membersList = JSON.parse(rawMembers);
+          if (Array.isArray(membersList) && membersList.length > 0) {
+            const existingManager = membersList.find((m) => m.role === 'manager') || membersList[0];
+            if (existingManager && existingManager.email !== 'saikat@mess.ac.bd') {
+              activeManager = existingManager;
+            }
+          }
+        }
+      } catch (e) {}
     }
 
     if (!activeManager) {
@@ -137,7 +155,7 @@ export function cleanDatabase(managerUser) {
         ...activeManager,
         role: 'manager',
         status: 'active',
-        joined_at: new Date().toISOString().split('T')[0]
+        joined_at: activeManager.joined_at || new Date().toISOString().split('T')[0]
       };
     }
 
