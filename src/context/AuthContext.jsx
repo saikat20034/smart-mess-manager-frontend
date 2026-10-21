@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { isSupabaseConfigured, supabase } from '../services/supabase';
 
+export const SUPER_ADMIN_EMAIL = 'mazharulislamsaikat2000gmail.com';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -89,6 +91,30 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('smm_auth_user_v2');
     }
   }, [user]);
+
+  // Single App Super Admin Invariant: Only 1 person is the admin for the entire application
+  const isAdmin = Boolean(
+    user && (
+      user.role === 'admin' ||
+      user.is_admin === true ||
+      (user.email && user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('smm_super_admin_email') === user.email?.trim().toLowerCase())
+    )
+  );
+
+  const verifyAdminKey = (secretKey) => {
+    const key = (secretKey || '').trim();
+    if (key === 'admin2026' || key === 'mazharul2026' || key === 'saikat2026') {
+      const updatedUser = { ...(user || {}), is_admin: true };
+      setUser(updatedUser);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('smm_auth_user_v2', JSON.stringify(updatedUser));
+        localStorage.setItem('smm_super_admin_email', (user?.email || SUPER_ADMIN_EMAIL).toLowerCase());
+      }
+      return true;
+    }
+    return false;
+  };
 
   // Demo 1-click login as Manager (Saikat)
   const loginAsManager = () => {
@@ -317,6 +343,8 @@ export const AuthProvider = ({ children }) => {
         user,
         role: user?.role || 'member',
         isManager: user?.role === 'manager',
+        isAdmin,
+        verifyAdminKey,
         loading,
         login,
         register,

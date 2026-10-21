@@ -9,6 +9,7 @@ import {
   History,
   CalendarDays,
   Settings,
+  Database,
   LogOut,
   X
 } from 'lucide-react';
@@ -19,7 +20,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { ProfilePictureModal } from './ProfilePictureModal';
 
 export const Sidebar = ({ isOpen, onClose }) => {
-  const { user, isManager, logout } = useAuth();
+  const { user, isManager, isAdmin, logout } = useAuth();
   const { t, isBn } = useLanguage();
   const {
     selectedMonth,
@@ -60,7 +61,8 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { path: '/bazar-planner', label: t('bazarRoster'), icon: CheckSquare },
     { path: '/previous-month', label: t('previousMonth'), icon: History },
     { path: '/all-months', label: t('allMonths'), icon: CalendarDays },
-    { path: '/settings', label: isBn ? 'মেস সেটিংস' : 'Mess Settings', icon: Settings }
+    { path: '/settings', label: isBn ? 'মেস সেটিংস' : 'Mess Settings', icon: Settings },
+    ...(isAdmin ? [{ path: '/database', label: isBn ? 'ডাটাবেস ভিউয়ার' : 'Database Viewer', icon: Database }] : [])
   ];
 
   const handleLogout = () => {

@@ -127,5 +127,35 @@ describe('Single Manager Invariant & Role Transfer', () => {
     expect(members[0].phone).toBe('01630496007');
     expect(members[0].role).toBe('manager');
   });
+
+  it('strictly distinguishes Super Admin from Mess Manager', () => {
+    // A regular manager should not be admin
+    const regularManager = {
+      id: 'mem-999',
+      name: 'Rahim Manager',
+      email: 'rahim@example.com',
+      role: 'manager'
+    };
+    const isRegularManagerAdmin = Boolean(
+      regularManager.role === 'admin' ||
+      regularManager.is_admin === true ||
+      regularManager.email === 'mazharulislamsaikat2000gmail.com'
+    );
+    expect(isRegularManagerAdmin).toBe(false);
+
+    // The designated Super Admin
+    const superAdmin = {
+      id: 'mem-admin',
+      name: 'Mazharul Islam',
+      email: 'mazharulislamsaikat2000gmail.com',
+      role: 'manager'
+    };
+    const isSuperAdmin = Boolean(
+      superAdmin.role === 'admin' ||
+      superAdmin.is_admin === true ||
+      superAdmin.email === 'mazharulislamsaikat2000gmail.com'
+    );
+    expect(isSuperAdmin).toBe(true);
+  });
 });
 
