@@ -5,16 +5,13 @@ import {
   Lock,
   Mail,
   ArrowRight,
-  Shield,
-  User,
-  Sparkles,
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 export const LoginPage = () => {
-  const { login, loginAsManager, loginAsMember, isDemoMode } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -35,16 +32,6 @@ export const LoginPage = () => {
     } else {
       setError(res.error || 'Invalid email or password');
     }
-  };
-
-  const handleDemoManager = () => {
-    loginAsManager();
-    navigate('/dashboard');
-  };
-
-  const handleDemoMember = () => {
-    loginAsMember();
-    navigate('/dashboard');
   };
 
   return (
@@ -76,44 +63,6 @@ export const LoginPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl border border-slate-100 dark:border-slate-800 sm:rounded-2xl sm:px-10">
-          {/* Quick 1-Click Demo Buttons */}
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-800/60">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300 mb-2">
-              <Sparkles className="w-4 h-4 text-emerald-600 animate-pulse" />
-              <span>Instant Demo Mode (No Setup Required)</span>
-            </div>
-            <p className="text-[11px] text-emerald-800 dark:text-emerald-200 mb-3 leading-relaxed">
-              Explore the fully functional application with sample Bangladeshi mess data immediately:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleDemoManager}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs transition-colors cursor-pointer"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span>As Manager</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDemoMember}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white rounded-lg shadow-xs transition-colors cursor-pointer"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>As Resident</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-slate-900 px-2 text-slate-400 dark:text-slate-500 font-medium">Or continue with credentials</span>
-            </div>
-          </div>
-
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -131,7 +80,7 @@ export const LoginPage = () => {
                 <input
                   type="email"
                   required
-                  placeholder="tanvir@du.ac.bd"
+                  placeholder="user@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-emerald-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
