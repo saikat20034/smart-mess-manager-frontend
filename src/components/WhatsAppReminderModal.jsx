@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
 import { formatBDT } from '../utils/calculations';
+import { getLiveBaseUrl } from '../utils/constants';
 import { Modal } from './Modal';
 
 export const WhatsAppReminderModal = ({ isOpen, onClose, member, mess }) => {
@@ -9,8 +10,10 @@ export const WhatsAppReminderModal = ({ isOpen, onClose, member, mess }) => {
   if (!member) return null;
 
   const dueAmount = Math.abs(member.netBalance || 0);
+  const baseUrl = getLiveBaseUrl();
+  const summaryLink = `${baseUrl}/my-summary`;
 
-  const messageText = `আসসালামু আলাইকুম ${member.name} ভাই,\n\nস্মার্ট মেস ম্যানেজার থেকে জানাচ্ছি:\nআপনার চলতি মাসের মেস হিসাব অনুযায়ী বকেয়া পাওনা হয়েছে: ${formatBDT(dueAmount)}।\n\nদয়া করে অতিসত্বর ম্যানেজারের বিকাশ/নগদে (${mess?.bkash_number || '01711223344'}) পরিশোধ করে ট্রানজেকশন আইডি পাঠিয়ে নিশ্চিত করবেন।\n\nধন্যবাদ,\n${mess?.name || 'মেস কর্তৃপক্ষ'}`;
+  const messageText = `আসসালামু আলাইকুম ${member.name} ভাই,\n\nস্মার্ট মেস ম্যানেজার থেকে জানাচ্ছি:\nআপনার চলতি মাসের মেস হিসাব অনুযায়ী বকেয়া পাওনা হয়েছে: ${formatBDT(dueAmount)}।\n\nদয়া করে অতিসত্বর ম্যানেজারের বিকাশ/নগদে (${mess?.bkash_number || '01711223344'}) পরিশোধ করে ট্রানজেকশন আইডি পাঠিয়ে নিশ্চিত করবেন।\n\n🌐 লাইভ হিসাবের বিবরণ দেখতে ভিজিট করুন:\n${summaryLink}\n\nধন্যবাদ,\n${mess?.name || 'মেস কর্তৃপক্ষ'}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(messageText);

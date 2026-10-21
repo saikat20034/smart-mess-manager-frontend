@@ -14,7 +14,8 @@ import {
   Moon,
   Laptop,
   Crown,
-  ShieldAlert
+  ShieldAlert,
+  Link2
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +24,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
 import { TransferManagerModal } from '../components/TransferManagerModal';
 import { Avatar } from '../components/Avatar';
+import { getLiveBaseUrl } from '../utils/constants';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
@@ -78,6 +80,14 @@ export const SettingsPage = () => {
     navigator.clipboard.writeText(form.invite_code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const [copiedLiveLink, setCopiedLiveLink] = useState(false);
+  const copyLiveLink = () => {
+    const baseUrl = getLiveBaseUrl();
+    navigator.clipboard.writeText(`${baseUrl}/register?code=${form.invite_code}`);
+    setCopiedLiveLink(true);
+    setTimeout(() => setCopiedLiveLink(false), 2000);
   };
 
   const regenerateInviteCode = () => {
@@ -349,8 +359,8 @@ export const SettingsPage = () => {
             New residents can use this secure code during signup to join this mess automatically.
           </p>
 
-          <div className="flex items-center gap-3 max-w-md">
-            <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-mono font-bold text-slate-900 tracking-wider text-sm flex items-center justify-between">
+          <div className="flex flex-wrap items-center gap-2 max-w-lg">
+            <div className="flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-mono font-bold text-slate-900 tracking-wider text-sm flex items-center justify-between">
               <span>{form.invite_code}</span>
               <button
                 type="button"
@@ -361,6 +371,16 @@ export const SettingsPage = () => {
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={copyLiveLink}
+              className="px-3.5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Copy live registration link"
+            >
+              {copiedLiveLink ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+              <span>{copiedLiveLink ? (isBn ? 'লিঙ্ক কপি হয়েছে!' : 'Live Link Copied!') : (isBn ? 'লাইভ লিঙ্ক কপি' : 'Copy Live Link')}</span>
+            </button>
 
             {isManager && (
               <button

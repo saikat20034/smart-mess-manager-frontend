@@ -11,6 +11,7 @@ import {
   Link2
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { getLiveBaseUrl } from '../utils/constants';
 
 export const InviteShareCard = ({ mess, memberCount = 0 }) => {
   const { isBn } = useLanguage();
@@ -20,12 +21,12 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
   const inviteCode = mess?.invite_code || 'MESS2026';
   const messName = mess?.name || 'আমাদের মেস';
 
-  const originUrl = window.location.origin;
-  const joinLink = `${originUrl}/register?code=${inviteCode}`;
+  const baseUrl = getLiveBaseUrl();
+  const joinLink = `${baseUrl}/register?code=${inviteCode}`;
 
   const shareText = isBn
-    ? `আসসালামু আলাইকুম!\nআমাদের মেসের ডিজিটাল মিল, বাজার ও ব্যালেন্স হিসাবের জন্য স্মার্ট মেস ম্যানেজারে যুক্ত হোন।\n\n🏠 মেসের নাম: ${messName}\n🔑 মেস ইনভাইটেশন কোড: ${inviteCode}\n\n👉 সরাসরি যুক্ত হওয়ার লিঙ্ক:\n${joinLink}`
-    : `Hello!\nJoin our Smart Mess Manager for digital meal tracking and expense transparency.\n\n🏠 Mess Name: ${messName}\n🔑 Invite Code: ${inviteCode}\n\n👉 Join Link:\n${joinLink}`;
+    ? `আসসালামু আলাইকুম!\nআমাদের মেসের ডিজিটাল মিল, বাজার ও ব্যালেন্স হিসাবের জন্য স্মার্ট মেস ম্যানেজারে যুক্ত হোন।\n\n🏠 মেসের নাম: ${messName}\n🔑 মেস ইনভাইটেশন কোড: ${inviteCode}\n\n👉 লাইভ ওয়েবসাইটে সরাসরি যুক্ত হওয়ার লিঙ্ক:\n${joinLink}`
+    : `Hello!\nJoin our Smart Mess Manager for digital meal tracking and expense transparency.\n\n🏠 Mess Name: ${messName}\n🔑 Invite Code: ${inviteCode}\n\n👉 Live Join Link:\n${joinLink}`;
 
   const copyCodeOnly = () => {
     navigator.clipboard.writeText(inviteCode);
@@ -150,7 +151,25 @@ export const InviteShareCard = ({ mess, memberCount = 0 }) => {
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-2xs"
         >
           {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
-          <span>{copiedLink ? 'জয়েন লিঙ্ক কপি হয়েছে!' : 'জয়েন লিঙ্ক কপি করুন'}</span>
+          <span>{copiedLink ? 'লাইভ লিঙ্ক কপি হয়েছে!' : 'লাইভ জয়েন লিঙ্ক কপি'}</span>
+        </button>
+      </div>
+
+      {/* Live website link display pill */}
+      <div className="mt-3.5 p-2.5 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider shrink-0 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+            {isBn ? 'লাইভ ওয়েবসাইট' : 'LIVE LINK'}
+          </span>
+          <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate select-all">
+            {joinLink}
+          </span>
+        </div>
+        <button
+          onClick={copyFullLink}
+          className="text-emerald-600 dark:text-emerald-400 hover:underline text-[11px] font-bold shrink-0 cursor-pointer"
+        >
+          {copiedLink ? (isBn ? '✓ কপি হয়েছে' : '✓ Copied') : (isBn ? 'কপি' : 'Copy')}
         </button>
       </div>
 
