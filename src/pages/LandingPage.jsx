@@ -116,7 +116,7 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-            <span>Built specifically for Bangladeshi University Messes & Shared Flats</span>
+            <span>Built specifically for Bangladeshi Bachelor Messes, Hostels & Shared Flats</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-tight">
@@ -354,7 +354,7 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-xl mx-auto mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">How It Works in 3 Steps</h2>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Straightforward mess accounting designed for busy university students.</p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Straightforward mess accounting designed for busy roommates and residents.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
