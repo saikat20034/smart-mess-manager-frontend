@@ -24,7 +24,8 @@ export const STORAGE_KEYS = {
   BAZAR_LIST: 'smm_bazar_list_v2',
   BAZAR_SCHEDULE: 'smm_bazar_schedule_v2',
   MEAL_REQUESTS: 'smm_meal_requests_v2',
-  CLEAN_DATABASE_FLAG: 'smm_clean_database_v2'
+  CLEAN_DATABASE_FLAG: 'smm_clean_database_v2',
+  ALL_MESSES: 'smm_all_registered_messes'
 };
 
 function getCleanFallback(key, fallback) {
@@ -247,12 +248,37 @@ export function createNewFreshMess({ messName, managerUser }) {
       role: 'manager',
       status: 'active',
       joined_at: new Date().toISOString().split('T')[0],
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+      avatar: managerUser.avatar || ''
     }
   ] : [];
 
   setLocalItem(STORAGE_KEYS.MESS, freshMess);
   setLocalItem(STORAGE_KEYS.MEMBERS, initialMembers);
+
+  // Sync with Super Admin all messes registry
+  const allMesses = getLocalItem(STORAGE_KEYS.ALL_MESSES, []);
+  const updatedAll = [
+    {
+      id: freshMess.id,
+      name: freshMess.name,
+      subtitle: freshMess.subtitle,
+      location: freshMess.address,
+      invite_code: freshMess.invite_code,
+      manager_name: managerUser?.name || '—',
+      manager_email: managerUser?.email || '—',
+      manager_phone: managerUser?.phone || '—',
+      members_count: initialMembers.length,
+      created_at: new Date().toISOString().split('T')[0],
+      last_active: new Date().toISOString().split('T')[0],
+      total_meals: 0,
+      total_expenses: 0,
+      total_deposits: 0,
+      status: 'Active'
+    },
+    ...(Array.isArray(allMesses) ? allMesses.filter((m) => m.id !== freshMess.id) : [])
+  ];
+  setLocalItem(STORAGE_KEYS.ALL_MESSES, updatedAll);
+
   setLocalItem(STORAGE_KEYS.EXPENSES, []);
   setLocalItem(STORAGE_KEYS.DEPOSITS, []);
   setLocalItem(STORAGE_KEYS.MEALS, []);

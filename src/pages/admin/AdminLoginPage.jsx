@@ -135,7 +135,7 @@ export const AdminLoginPage = () => {
                 type="button"
                 onClick={handleQuickFill}
                 className="text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer underline flex items-center gap-1"
-                title="Fill it24647@mbstu.ac.bd / saikat20034"
+                title="অ্যাডমিন আইডি ও পাসওয়ার্ড অটো ফিল করুন"
               >
                 <KeyRound className="w-3 h-3" />
                 <span>অ্যাডমিন ক্রেডেনশিয়াল অটো ফিল</span>
