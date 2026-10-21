@@ -1,7 +1,7 @@
 /**
  * Application Global Constants
  */
-export const LIVE_SITE_URL = 'https://smart-mess-manager-theta.vercel.app';
+export const LIVE_SITE_URL = 'https://smart-mess-manager.surge.sh';
 
 /**
  * Returns the effective live base URL for invitations and links.
