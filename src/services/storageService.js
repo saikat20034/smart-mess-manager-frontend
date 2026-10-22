@@ -389,15 +389,36 @@ export const dataService = {
   async addMember(memberData) {
     const role = memberData.role || 'member';
     const newMember = {
-      id: `mem-${Date.now()}`,
+      id: memberData.id || `mem-${Date.now()}`,
       joined_at: new Date().toISOString().split('T')[0],
       status: 'active',
       role,
-      avatar: `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`,
+      avatar: memberData.avatar || `https://images.unsplash.com/photo-${1535713875002 + Math.floor(Math.random() * 1000)}?w=100&h=100&fit=crop`,
       ...memberData
     };
 
-    const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
+    // If Supabase is configured, insert to Supabase mess_members
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          await supabase.from('mess_members').insert({
+            mess_id: activeMess.id,
+            name: newMember.name,
+            phone: newMember.phone || '',
+            email: newMember.email || '',
+            role: newMember.role,
+            status: newMember.status,
+            room_number: newMember.room_number || ''
+          });
+        }
+      } catch (err) {
+        console.error('Supabase addMember error:', err);
+      }
+    }
+
+    const members = getLocalItem(STORAGE_KEYS.MEMBERS, []);
     if (role === 'manager') {
       // Enforce single manager invariant: demote any existing manager
       members.forEach((m, idx) => {
@@ -406,8 +427,54 @@ export const dataService = {
         }
       });
     }
-    members.push(newMember);
+
+    // Prevent duplicate member by id or email
+    const existingIdx = members.findIndex(
+      (m) => m.id === newMember.id || (m.email && newMember.email && m.email.toLowerCase() === newMember.email.toLowerCase())
+    );
+    if (existingIdx !== -1) {
+      members[existingIdx] = { ...members[existingIdx], ...newMember };
+    } else {
+      members.push(newMember);
+    }
     setLocalItem(STORAGE_KEYS.MEMBERS, members);
+
+    // Sync with smm_all_registered_members & update mess members_count
+    try {
+      const rawAllMembers = localStorage.getItem('smm_all_registered_members');
+      let allMembers = rawAllMembers ? JSON.parse(rawAllMembers) : [];
+      if (!Array.isArray(allMembers)) allMembers = [];
+      const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+      const activeMess = rawMess ? JSON.parse(rawMess) : null;
+      const targetMessId = memberData.mess_id || activeMess?.id || 'mess-active';
+      const targetMessName = memberData.mess_name || activeMess?.name || 'আমাদের মেস';
+      const targetInviteCode = memberData.invite_code || activeMess?.invite_code;
+
+      allMembers.push({
+        ...newMember,
+        mess_id: targetMessId,
+        mess_name: targetMessName
+      });
+      localStorage.setItem('smm_all_registered_members', JSON.stringify(allMembers));
+
+      const rawAllMesses = localStorage.getItem(STORAGE_KEYS.ALL_MESSES);
+      if (rawAllMesses) {
+        let allMesses = JSON.parse(rawAllMesses);
+        if (Array.isArray(allMesses)) {
+          allMesses = allMesses.map((m) => {
+            const matchesId = (targetMessId && m.id === targetMessId) || (activeMess?.id && m.id === activeMess.id);
+            const matchesInvite = targetInviteCode && m.invite_code && m.invite_code.toUpperCase() === targetInviteCode.toUpperCase();
+            if (matchesId || matchesInvite) {
+              const newCount = targetMessId === activeMess?.id ? Math.max(members.length, (m.members_count || 0) + 1) : ((m.members_count || 0) + 1);
+              return { ...m, members_count: newCount };
+            }
+            return m;
+          });
+          localStorage.setItem(STORAGE_KEYS.ALL_MESSES, JSON.stringify(allMesses));
+        }
+      }
+    } catch (e) {}
+
     this.logActivity('ADD_MEMBER', `নতুন মেম্বার: ${newMember.name}`, `রুম: ${newMember.room_number || 'N/A'}`);
     return newMember;
   },

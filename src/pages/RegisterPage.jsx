@@ -19,6 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { useMess } from '../context/MessContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { STORAGE_KEYS } from '../services/storageService';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
@@ -64,12 +66,68 @@ export const RegisterPage = () => {
       return;
     }
 
+    if (mode === 'join' && !formData.inviteCode.trim()) {
+      setError('দয়া করে মেসের ইনভাইট কোডটি লিখুন');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const role = mode === 'create' ? 'manager' : 'member';
 
-      // 1. Register with auth system
+      // 1. Look up mess if joining
+      let targetMess = null;
+      if (mode === 'join') {
+        const cleanCode = formData.inviteCode.trim().toUpperCase();
+
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data, error: sbErr } = await supabase
+              .from('messes')
+              .select('*')
+              .eq('invite_code', cleanCode)
+              .single();
+            if (!sbErr && data) {
+              targetMess = data;
+            }
+          } catch (e) {}
+        }
+
+        if (!targetMess && typeof localStorage !== 'undefined') {
+          const rawActive = localStorage.getItem(STORAGE_KEYS.MESS);
+          if (rawActive) {
+            try {
+              const act = JSON.parse(rawActive);
+              if (act.invite_code && act.invite_code.toUpperCase() === cleanCode) {
+                targetMess = act;
+              }
+            } catch (e) {}
+          }
+        }
+
+        if (!targetMess && typeof localStorage !== 'undefined') {
+          const rawAll = localStorage.getItem(STORAGE_KEYS.ALL_MESSES);
+          if (rawAll) {
+            try {
+              const list = JSON.parse(rawAll);
+              if (Array.isArray(list)) {
+                targetMess = list.find(
+                  (m) => m.invite_code && m.invite_code.toUpperCase() === cleanCode
+                );
+              }
+            } catch (e) {}
+          }
+        }
+
+        if (!targetMess) {
+          setError(`ইনভাইট কোড "${cleanCode}" সঠিক নয়! কোনো সক্রিয় মেস পাওয়া যায়নি।`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Register with auth system
       const res = await register({
         name: formData.name,
         email: formData.email,
@@ -87,6 +145,11 @@ export const RegisterPage = () => {
           });
         } else {
           // Resident joins existing mess with invite code
+          if (targetMess && typeof localStorage !== 'undefined') {
+            localStorage.setItem(STORAGE_KEYS.MESS, JSON.stringify(targetMess));
+            localStorage.removeItem('smm_active_mess_deleted');
+          }
+
           await addMember({
             id: res.user.id,
             name: formData.name,
