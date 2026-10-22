@@ -339,8 +339,12 @@ export const dataService = {
       return null;
     }
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('messes').select('*').limit(1).single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('messes').select('*').limit(1).single();
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn('Supabase getMess network error, using local data:', err);
+      }
     }
     const mess = getLocalItem(STORAGE_KEYS.MESS, null);
     if (mess && (mess.breakfast_unit === 0.5 || !mess.breakfast_unit)) {
@@ -361,8 +365,12 @@ export const dataService = {
   // Members
   async getMembers() {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('mess_members').select('*').order('joined_at', { ascending: true });
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('mess_members').select('*').order('joined_at', { ascending: true });
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn('Supabase getMembers network error, using local data:', err);
+      }
     }
     const members = getLocalItem(STORAGE_KEYS.MEMBERS, INITIAL_MEMBERS);
     // Enforce single manager invariant: at most one manager at any time

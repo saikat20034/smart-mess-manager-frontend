@@ -305,24 +305,30 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        const loggedUser = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.full_name || email.split('@')[0],
-          role: 'manager',
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-        };
-        setUser(loggedUser);
-        return { success: true, user: loggedUser };
-      } else {
-        const cleanInput = (email || '').trim().toLowerCase();
-        let storedMembers = [];
         try {
-          const raw = localStorage.getItem('smm_members_v2');
-          if (raw) storedMembers = JSON.parse(raw);
-        } catch (e) {}
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (!error && data?.user) {
+            const loggedUser = {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.full_name || email.split('@')[0],
+              role: 'manager',
+              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+            };
+            setUser(loggedUser);
+            return { success: true, user: loggedUser };
+          }
+        } catch (sbErr) {
+          console.warn('Supabase sign-in network error, trying local credentials:', sbErr);
+        }
+      }
+
+      const cleanInput = (email || '').trim().toLowerCase();
+      let storedMembers = [];
+      try {
+        const raw = localStorage.getItem('smm_members_v2');
+        if (raw) storedMembers = JSON.parse(raw);
+      } catch (e) {}
 
         // 1. Look for existing member matching email, phone, or name
         const matchedMember = storedMembers.find(
@@ -361,7 +367,6 @@ export const AuthProvider = ({ children }) => {
           success: false,
           error: 'ভুল ইমেইল অথবা পাসওয়ার্ড! এই মেসে কোনো সক্রিয় মেম্বার খুঁজে পাওয়া যায়নি।'
         };
-      }
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
@@ -373,37 +378,34 @@ export const AuthProvider = ({ children }) => {
   const register = async ({ name, email, phone, password, role = 'member' }) => {
     setLoading(true);
     try {
+      let sbUserId = null;
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name, phone }
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: name, phone }
+            }
+          });
+          if (!error && data?.user?.id) {
+            sbUserId = data.user.id;
           }
-        });
-        if (error) throw error;
-        const newUser = {
-          id: data.user?.id || `user-${Date.now()}`,
-          name,
-          email,
-          phone,
-          role,
-          avatar: ''
-        };
-        setUser(newUser);
-        return { success: true, user: newUser };
-      } else {
-        const newUser = {
-          id: `mem-${Date.now()}`,
-          name,
-          email,
-          phone,
-          role,
-          avatar: ''
-        };
-        setUser(newUser);
-        return { success: true, user: newUser };
+        } catch (sbErr) {
+          console.warn('Supabase signup network error, continuing with local user:', sbErr);
+        }
       }
+
+      const newUser = {
+        id: sbUserId || `mem-${Date.now()}`,
+        name,
+        email,
+        phone,
+        role,
+        avatar: ''
+      };
+      setUser(newUser);
+      return { success: true, user: newUser };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
