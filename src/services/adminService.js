@@ -45,8 +45,10 @@ export const adminService = {
 
       const activeManager = activeMembers.find((m) => m.role === 'manager') || activeMembers[0];
 
-      // If active mess exists and has a name, include it in the real messes list
-      if (activeMess && activeMess.name) {
+      const isMessDeleted = localStorage.getItem('smm_active_mess_deleted') === 'true';
+
+      // If active mess exists and has a name and has not been deleted by Super Admin, include it
+      if (!isMessDeleted && activeMess && activeMess.name) {
         const formattedActive = {
           id: activeMess.id || 'mess-active',
           name: activeMess.name,
@@ -86,10 +88,11 @@ export const adminService = {
       const activeMess = rawMess ? JSON.parse(rawMess) : null;
       const activeMessName = activeMess?.name || 'আমাদের মেস';
 
+      const isMessDeleted = localStorage.getItem('smm_active_mess_deleted') === 'true';
       const users = [];
 
-      // 1. Add active mess members
-      if (Array.isArray(activeMembers) && activeMembers.length > 0) {
+      // 1. Add active mess members if active mess is not deleted
+      if (!isMessDeleted && Array.isArray(activeMembers) && activeMembers.length > 0) {
         activeMembers.forEach((m) => {
           users.push({
             id: m.id,
@@ -188,5 +191,69 @@ export const adminService = {
       averageMealRate: totalMeals > 0 ? Math.round((totalExpenses / totalMeals) * 100) / 100 : 0,
       messesGrowth
     };
+  },
+
+  // Delete a mess and all its associated data from the platform database
+  deleteMess: (messId) => {
+    try {
+      if (typeof localStorage === 'undefined') return false;
+
+      // 1. Remove from all registered messes registry
+      const rawRegistered = localStorage.getItem('smm_all_registered_messes');
+      let registeredList = rawRegistered ? JSON.parse(rawRegistered) : [];
+      const targetMess = registeredList.find((m) => m.id === messId) || null;
+      registeredList = registeredList.filter((m) => m.id !== messId);
+      localStorage.setItem('smm_all_registered_messes', JSON.stringify(registeredList));
+
+      // 2. Remove associated users from smm_all_registered_members
+      const rawOtherMembers = localStorage.getItem('smm_all_registered_members');
+      if (rawOtherMembers) {
+        try {
+          let others = JSON.parse(rawOtherMembers);
+          if (Array.isArray(others)) {
+            others = others.filter(
+              (u) => u.mess_id !== messId && (!targetMess || u.mess_name !== targetMess.name)
+            );
+            localStorage.setItem('smm_all_registered_members', JSON.stringify(others));
+          }
+        } catch (e) {}
+      }
+
+      // 3. Check if target is the currently active mess
+      const rawActiveMess = localStorage.getItem(STORAGE_KEYS.MESS);
+      let isActive = false;
+      if (rawActiveMess) {
+        try {
+          const activeMess = JSON.parse(rawActiveMess);
+          if (
+            activeMess.id === messId ||
+            messId === 'mess-active' ||
+            (targetMess && activeMess.name === targetMess.name)
+          ) {
+            isActive = true;
+          }
+        } catch (e) {}
+      }
+
+      // If active or target is active mess, wipe active storage keys and mark deleted
+      if (isActive || messId === 'mess-active') {
+        localStorage.setItem('smm_active_mess_deleted', 'true');
+        localStorage.removeItem(STORAGE_KEYS.MESS);
+        localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+        localStorage.removeItem(STORAGE_KEYS.MEALS);
+        localStorage.removeItem(STORAGE_KEYS.EXPENSES);
+        localStorage.removeItem(STORAGE_KEYS.DEPOSITS);
+        localStorage.removeItem(STORAGE_KEYS.SETTLEMENTS);
+        localStorage.removeItem(STORAGE_KEYS.BAZAR_LIST);
+        localStorage.removeItem(STORAGE_KEYS.BAZAR_SCHEDULE);
+        localStorage.removeItem(STORAGE_KEYS.MEAL_REQUESTS);
+        localStorage.removeItem(STORAGE_KEYS.ACTIVITIES);
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Error deleting mess:', e);
+      return false;
+    }
   }
 };

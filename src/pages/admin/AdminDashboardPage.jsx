@@ -25,7 +25,9 @@ import {
   Copy,
   Check,
   Code,
-  Table as TableIcon
+  Table as TableIcon,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import {
   BarChart,
@@ -57,10 +59,29 @@ export const AdminDashboardPage = () => {
   const [copied, setCopied] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Mess deletion state
+  const [messToDelete, setMessToDelete] = useState(null);
+  const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Fetch live aggregated data
   const messes = useMemo(() => adminService.getAllMesses(), [refreshTrigger]);
   const users = useMemo(() => adminService.getAllUsers(), [refreshTrigger]);
   const stats = useMemo(() => adminService.getPlatformStats(), [refreshTrigger]);
+
+  const handleConfirmDeleteMess = () => {
+    if (!messToDelete) return;
+    setIsDeleting(true);
+    const success = adminService.deleteMess(messToDelete.id);
+    if (success) {
+      const deletedName = messToDelete.name;
+      setMessToDelete(null);
+      setRefreshTrigger((prev) => prev + 1);
+      setDeleteSuccessToast(`"${deletedName}" মেসটি ডাটাবেস থেকে সফলভাবে মুছে ফেলা হয়েছে!`);
+      setTimeout(() => setDeleteSuccessToast(''), 4000);
+    }
+    setIsDeleting(false);
+  };
 
   const handleLogout = () => {
     logoutSuperAdmin();
@@ -402,12 +423,13 @@ export const AdminDashboardPage = () => {
                       <th className="py-3 px-4">ব্যবহারের শুরুর তারিখ</th>
                       <th className="py-3 px-4">মোট মিল ও খরচ</th>
                       <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
+                      <th className="py-3 px-4 text-center">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-medium">
                     {filteredMesses.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="py-12 text-center text-slate-500">
+                        <td colSpan="8" className="py-12 text-center text-slate-500">
                           <Building2 className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-70" />
                           <p className="text-xs font-semibold text-slate-400">কোনো মেস পাওয়া যায়নি</p>
                           <p className="text-[11px] text-slate-500 mt-0.5">নতুন কোনো মেস নিবন্ধিত হলে এখানে স্বয়ংক্রিয়ভাবে তালিকা প্রদর্শিত হবে।</p>
@@ -463,6 +485,17 @@ export const AdminDashboardPage = () => {
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                               {mess.status}
                             </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => setMessToDelete(mess)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 text-xs font-semibold transition-all cursor-pointer shadow-2xs group"
+                              title="ডাটাবেস থেকে এই মেসটি সম্পূর্ণ মুছে ফেলুন"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                              <span>মেস মুছুন</span>
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -680,7 +713,17 @@ export const AdminDashboardPage = () => {
                     <div key={m.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-white text-xs truncate max-w-[180px]">{m.name}</span>
-                        <span className="text-[10px] font-mono text-emerald-400">{m.members_count} জন</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-emerald-400">{m.members_count} জন</span>
+                          <button
+                            type="button"
+                            onClick={() => setMessToDelete(m)}
+                            className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            title="মেস মুছুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-slate-400">
                         <span>মোট মিল:</span>
@@ -777,6 +820,87 @@ export const AdminDashboardPage = () => {
                 {JSON.stringify(activeTableRawData, null, 2)}
               </pre>
             </div>
+          </div>
+        )}
+
+        {/* Delete Mess Confirmation Modal */}
+        {messToDelete && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scale-up">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">মেস সম্পূর্ণ মুছে ফেলার সতর্কতা</h3>
+                  <p className="text-xs text-rose-400/90 font-medium">এই অ্যাকশনটি অপরিবর্তনীয় (Irreversible)</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">মেসের নাম:</span>
+                  <span className="font-bold text-white">{messToDelete.name}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">ইনভাইট কোড:</span>
+                  <span className="font-mono font-bold text-emerald-400">{messToDelete.invite_code}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">ম্যানেজার:</span>
+                  <span className="font-semibold text-slate-200">{messToDelete.manager_name} ({messToDelete.manager_phone})</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">সদস্য সংখ্যা:</span>
+                  <span className="font-mono text-indigo-300 font-bold">{messToDelete.members_count} জন</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300/90 leading-relaxed">
+                <p className="font-semibold text-rose-200 mb-1 flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                  <span>স্থায়ীভাবে ডাটাবেস থেকে মুছে যাবে:</span>
+                </p>
+                এই মেসের সকল সদস্য তথ্য, মিল হিস্ট্রি, মিল রেট, বাজার তালিকা ও খরচ-জমার হিসাব ডাটাবেস থেকে চিরতরে মুছে ফেলা হবে।
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMessToDelete(null)}
+                  disabled={isDeleting}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteMess}
+                  disabled={isDeleting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-lg shadow-rose-900/30 cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>মুছে ফেলা হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>হ্যাঁ, স্থায়ীভাবে মুছুন</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success Toast */}
+        {deleteSuccessToast && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-2xl animate-fade-in">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{deleteSuccessToast}</span>
           </div>
         )}
       </main>

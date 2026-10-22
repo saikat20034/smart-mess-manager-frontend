@@ -252,6 +252,10 @@ export function createNewFreshMess({ messName, managerUser }) {
     }
   ] : [];
 
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('smm_active_mess_deleted');
+  }
+
   setLocalItem(STORAGE_KEYS.MESS, freshMess);
   setLocalItem(STORAGE_KEYS.MEMBERS, initialMembers);
 
