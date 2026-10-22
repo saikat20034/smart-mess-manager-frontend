@@ -95,12 +95,6 @@ export const LandingPage = () => {
           <div className="flex items-center gap-3">
             <ThemeToggle size="sm" showLabel={false} />
             <Link
-              to="/login"
-              className="text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white px-3 py-2 rounded-lg"
-            >
-              Sign In
-            </Link>
-            <Link
               to="/register"
               className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
             >
