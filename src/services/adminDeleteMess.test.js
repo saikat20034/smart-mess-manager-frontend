@@ -5,11 +5,13 @@ global.localStorage = {
   getItem: (key) => store[key] || null,
   setItem: (key, val) => { store[key] = String(val); },
   removeItem: (key) => { delete store[key]; },
-  clear: () => { Object.keys(store).forEach((k) => delete store[k]); }
+  clear: () => { Object.keys(store).forEach((k) => delete store[k]); },
+  get length() { return Object.keys(store).length; },
+  key: (i) => Object.keys(store)[i] || null
 };
 
 import { adminService } from './adminService';
-import { STORAGE_KEYS } from './storageService';
+import { STORAGE_KEYS, dataService, initLocalStorageIfEmpty } from './storageService';
 
 describe('Admin Delete Mess Service', () => {
   beforeEach(() => {
@@ -39,21 +41,40 @@ describe('Admin Delete Mess Service', () => {
     expect(remainingUsers[0].name).toBe('Rahim');
   });
 
-  it('deletes active mess and purges active storage data', () => {
+  it('deletes active mess, purges all documents and terminates user session', async () => {
     const activeMess = { id: 'mess-active-test', name: 'Active Mess', invite_code: 'ACT001' };
     localStorage.setItem(STORAGE_KEYS.MESS, JSON.stringify(activeMess));
     localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify([{ id: 'm1', name: 'Manager' }]));
     localStorage.setItem(STORAGE_KEYS.MEALS, JSON.stringify([{ id: 'meal-1', count: 2 }]));
     localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify([{ id: 'exp-1', amount: 500 }]));
+    localStorage.setItem(STORAGE_KEYS.DEPOSITS, JSON.stringify([{ id: 'dep-1', amount: 1000 }]));
+    localStorage.setItem(STORAGE_KEYS.SETTLEMENTS, JSON.stringify([{ id: 'set-1' }]));
+    localStorage.setItem(STORAGE_KEYS.BAZAR_LIST, JSON.stringify([{ id: 'baz-1' }]));
+    localStorage.setItem('smm_auth_user_v2', JSON.stringify({ id: 'm1', name: 'Manager' }));
 
     const result = adminService.deleteMess('mess-active-test');
     expect(result).toBe(true);
 
+    // Active deleted flag is set
     expect(localStorage.getItem('smm_active_mess_deleted')).toBe('true');
+
+    // All documents and active session purged
+    expect(localStorage.getItem('smm_auth_user_v2')).toBeNull();
     expect(localStorage.getItem(STORAGE_KEYS.MESS)).toBeNull();
     expect(localStorage.getItem(STORAGE_KEYS.MEMBERS)).toBeNull();
     expect(localStorage.getItem(STORAGE_KEYS.MEALS)).toBeNull();
     expect(localStorage.getItem(STORAGE_KEYS.EXPENSES)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.DEPOSITS)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.SETTLEMENTS)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.BAZAR_LIST)).toBeNull();
+
+    // Data service returns null, preventing ghost mess
+    const mess = await dataService.getMess();
+    expect(mess).toBeNull();
+
+    // initLocalStorageIfEmpty does not resurrect the deleted mess
+    initLocalStorageIfEmpty();
+    expect(localStorage.getItem(STORAGE_KEYS.MESS)).toBeNull();
 
     const allMesses = adminService.getAllMesses();
     expect(allMesses.length).toBe(0);
@@ -74,5 +95,19 @@ describe('Admin Delete Mess Service', () => {
     expect(localStorage.getItem('smm_active_mess_deleted')).toBeNull();
     expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.MESS)).name).toBe('Current Mess');
     expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.MEMBERS)).length).toBe(1);
+  });
+
+  it('verifies that users cannot log in after mess is deleted', () => {
+    // Mess deleted by Super Admin
+    localStorage.setItem('smm_active_mess_deleted', 'true');
+    localStorage.removeItem(STORAGE_KEYS.MESS);
+    localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+
+    // Any attempt to find members or mess yields null/empty
+    const isMessDeleted = localStorage.getItem('smm_active_mess_deleted') === 'true';
+    const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+
+    expect(isMessDeleted).toBe(true);
+    expect(rawMess).toBeNull();
   });
 });

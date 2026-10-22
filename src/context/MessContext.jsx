@@ -82,6 +82,27 @@ export const MessProvider = ({ children }) => {
     refreshData();
   }, [refreshData]);
 
+  // Listen for mess deletion event across components & windows
+  useEffect(() => {
+    const handleMessDeleted = () => {
+      setMess(null);
+      setMembers([]);
+      setCategories([]);
+      setMeals([]);
+      setExpenses([]);
+      setDeposits([]);
+      setSettlements([]);
+      setActivities([]);
+      setBazarList([]);
+      setBazarSchedule([]);
+      setMealRequests({ auto: false, morning: 0, lunch: 0, dinner: 0 });
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('smm_mess_deleted', handleMessDeleted);
+      return () => window.removeEventListener('smm_mess_deleted', handleMessDeleted);
+    }
+  }, []);
+
   // Real-time calculation of member balances and summary metrics
   const financialData = React.useMemo(() => {
     if (!members.length) {

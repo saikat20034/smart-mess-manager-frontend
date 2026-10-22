@@ -32,7 +32,10 @@ import { NotFoundPage, UnauthorizedPage } from './pages/NotFoundPage';
 // Protected Route Guard
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  if (!user) {
+  const isMessDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true';
+  const hasMess = typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('smm_mess_data_v2'));
+
+  if (!user || isMessDeleted || !hasMess) {
     return <Navigate to="/login" replace />;
   }
   return children;

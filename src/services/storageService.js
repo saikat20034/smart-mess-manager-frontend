@@ -29,6 +29,13 @@ export const STORAGE_KEYS = {
 };
 
 function getCleanFallback(key, fallback) {
+  if (typeof localStorage !== 'undefined') {
+    if (localStorage.getItem('smm_active_mess_deleted') === 'true') {
+      if (key === STORAGE_KEYS.MESS) return null;
+      if (key === STORAGE_KEYS.MEAL_REQUESTS) return { auto: false, morning: 0, lunch: 0, dinner: 0 };
+      return [];
+    }
+  }
   if (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) === 'true') {
     if (key === STORAGE_KEYS.MESS) {
       return {
@@ -62,6 +69,11 @@ function getCleanFallback(key, fallback) {
 function getLocalItem(key, fallback) {
   try {
     if (typeof localStorage === 'undefined') return getCleanFallback(key, fallback);
+    if (localStorage.getItem('smm_active_mess_deleted') === 'true') {
+      if (key === STORAGE_KEYS.MESS) return null;
+      if (key === STORAGE_KEYS.MEAL_REQUESTS) return { auto: false, morning: 0, lunch: 0, dinner: 0 };
+      return [];
+    }
     const val = localStorage.getItem(key);
     if (val !== null && val !== undefined) {
       const parsed = JSON.parse(val);
@@ -94,6 +106,9 @@ function setLocalItem(key, data) {
 
 export function cleanDatabase(managerUser) {
   try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true' && !managerUser) {
+      return null;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG, 'true');
     }
@@ -198,6 +213,10 @@ export function cleanDatabase(managerUser) {
 
 export function initLocalStorageIfEmpty() {
   if (typeof localStorage === 'undefined') return;
+  if (localStorage.getItem('smm_active_mess_deleted') === 'true') {
+    // Mess has been deleted by Super Admin. Do not resurrect!
+    return;
+  }
   if (localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) === 'true') {
     if (!localStorage.getItem(STORAGE_KEYS.MESS)) {
       cleanDatabase();
@@ -305,20 +324,25 @@ export function createNewFreshMess({ messName, managerUser }) {
 
 // Auto-run init & clean database check
 if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-  if (localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) !== 'true') {
-    cleanDatabase();
+  if (localStorage.getItem('smm_active_mess_deleted') !== 'true') {
+    if (localStorage.getItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG) !== 'true') {
+      cleanDatabase();
+    }
+    initLocalStorageIfEmpty();
   }
 }
-initLocalStorageIfEmpty();
 
 export const dataService = {
   // Mess details
   async getMess() {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true') {
+      return null;
+    }
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('messes').select('*').limit(1).single();
       if (!error && data) return data;
     }
-    const mess = getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
+    const mess = getLocalItem(STORAGE_KEYS.MESS, null);
     if (mess && (mess.breakfast_unit === 0.5 || !mess.breakfast_unit)) {
       mess.breakfast_unit = 1.0;
       setLocalItem(STORAGE_KEYS.MESS, mess);

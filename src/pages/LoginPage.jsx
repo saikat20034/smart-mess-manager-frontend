@@ -73,6 +73,13 @@ export const LoginPage = () => {
             </div>
           )}
 
+          {typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true' && !error && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>পূর্ববর্তী মেসটি ডাটাবেস থেকে মুছে ফেলা হয়েছে। নতুন মেস শুরু করতে অনুগ্রহ করে রেজিস্টার করুন।</span>
+            </div>
+          )}
+
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">

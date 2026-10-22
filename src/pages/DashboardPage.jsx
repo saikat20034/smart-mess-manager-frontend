@@ -171,6 +171,31 @@ export const DashboardPage = () => {
     });
   };
 
+  const isMessDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true';
+
+  if (!mess || isMessDeleted) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6 space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center">
+          <Home className="w-8 h-8" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">মেসটি ডাটাবেস থেকে মুছে ফেলা হয়েছে</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            সুপার অ্যাডমিন কর্তৃক এই মেসটি ও এর সকল ডকুমেন্ট সম্পূর্ণ অপসারণ করা হয়েছে। নতুন মেস শুরু করতে নতুন করে রেজিস্টার করুন।
+          </p>
+        </div>
+        <Link
+          to="/register"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-colors"
+        >
+          <span>নতুন মেস তৈরি করুন</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Real-time Live Date & Time Top Banner */}

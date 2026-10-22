@@ -9,6 +9,14 @@ export const AuthProvider = ({ children }) => {
   // Initialize user, synchronizing with active mess members in storage
   const [user, setUser] = useState(() => {
     try {
+      if (typeof localStorage !== 'undefined') {
+        const isDeleted = localStorage.getItem('smm_active_mess_deleted') === 'true';
+        if (isDeleted) return null;
+      }
+
+      const rawMess = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_mess_data_v2') : null;
+      if (!rawMess) return null;
+
       const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_auth_user_v2') : null;
       let parsed = saved ? JSON.parse(saved) : null;
 
@@ -27,8 +35,7 @@ export const AuthProvider = ({ children }) => {
             if (matched) return matched;
           }
 
-          // 2. If parsed user is dummy Saikat but the mess has real members (e.g. Mazharul Islam):
-          // Automatically sync with the actual manager/member of this mess!
+          // 2. If mess has members, sync with the actual manager/member of this mess
           const activeManager = members.find((m) => m.role === 'manager') || members[0];
           if (activeManager) {
             if (typeof localStorage !== 'undefined') {
@@ -52,22 +59,30 @@ export const AuthProvider = ({ children }) => {
       console.error('Error reading auth user:', e);
     }
 
-    return {
-      id: 'mem-001',
-      name: 'Saikat',
-      email: 'saikat@mess.ac.bd',
-      phone: '01711223344',
-      role: 'manager',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-    };
+    return null;
   });
 
   const [loading, setLoading] = useState(false);
+
+  // Listen for mess deletion event across components & windows
+  useEffect(() => {
+    const handleMessDeleted = () => {
+      setUser(null);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('smm_mess_deleted', handleMessDeleted);
+      return () => window.removeEventListener('smm_mess_deleted', handleMessDeleted);
+    }
+  }, []);
 
   // Proactively sync user with active mess members if stored user is out-of-sync
   useEffect(() => {
     try {
       if (typeof localStorage === 'undefined') return;
+      if (localStorage.getItem('smm_active_mess_deleted') === 'true') {
+        setUser(null);
+        return;
+      }
       const rawMembers = localStorage.getItem('smm_members_v2');
       if (rawMembers) {
         const members = JSON.parse(rawMembers);
@@ -273,6 +288,22 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password }) => {
     setLoading(true);
     try {
+      // 1. Check if the active mess has been deleted by Super Admin or no mess exists
+      const isMessDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true';
+      const rawMess = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_mess_data_v2') : null;
+      const rawRegMesses = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_all_registered_messes') : null;
+      let regMesses = [];
+      try {
+        if (rawRegMesses) regMesses = JSON.parse(rawRegMesses);
+      } catch (e) {}
+
+      if (isMessDeleted || (!rawMess && (!Array.isArray(regMesses) || regMesses.length === 0))) {
+        return {
+          success: false,
+          error: 'মেসটি ডাটাবেস থেকে মুছে ফেলা হয়েছে! আপনি আর এই মেসে লগইন করতে পারবেন না। নতুন মেস শুরু করতে রেজিস্টার করুন।'
+        };
+      }
+
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -307,35 +338,29 @@ export const AuthProvider = ({ children }) => {
           return { success: true, user: matchedMember };
         }
 
-        // 2. Explicit demo logins
+        // 2. Explicit demo logins ONLY IF the member actually exists in stored members
         if (cleanInput.includes('demo-manager') || cleanInput === 'saikat@mess.ac.bd') {
-          return { success: true, user: loginAsManager() };
+          const saikat = storedMembers.find((m) => m.email === 'saikat@mess.ac.bd' || m.role === 'manager');
+          if (saikat) {
+            setUser(saikat);
+            localStorage.setItem('smm_auth_user_v2', JSON.stringify(saikat));
+            return { success: true, user: saikat };
+          }
         }
         if (cleanInput.includes('demo-member') || cleanInput === 'shakib@mess.ac.bd') {
-          return { success: true, user: loginAsMember() };
+          const shakib = storedMembers.find((m) => m.email === 'shakib@mess.ac.bd' || m.name?.toLowerCase().includes('shakib'));
+          if (shakib) {
+            setUser(shakib);
+            localStorage.setItem('smm_auth_user_v2', JSON.stringify(shakib));
+            return { success: true, user: shakib };
+          }
         }
 
-        // 3. Custom email / login (e.g. mazharulislamsaikat2000gmail.com)
-        const activeManager = storedMembers.find((m) => m.role === 'manager');
-        const isResident = cleanInput.includes('member') || cleanInput.includes('resident');
-        const role = isResident ? 'member' : (activeManager ? 'member' : 'manager');
-
-        // Extract clean readable name from email
-        let cleanName = (email || '').split('@')[0].replace(/[._0-9]/g, ' ').trim();
-        if (!cleanName) cleanName = 'User';
-        cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-
-        const customUser = {
-          id: `mem-${Date.now()}`,
-          name: cleanName,
-          email: email.trim(),
-          phone: '',
-          role,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+        // If member not found in the mess roster, reject login
+        return {
+          success: false,
+          error: 'ভুল ইমেইল অথবা পাসওয়ার্ড! এই মেসে কোনো সক্রিয় মেম্বার খুঁজে পাওয়া যায়নি।'
         };
-        setUser(customUser);
-        localStorage.setItem('smm_auth_user_v2', JSON.stringify(customUser));
-        return { success: true, user: customUser };
       }
     } catch (err) {
       return { success: false, error: err.message };

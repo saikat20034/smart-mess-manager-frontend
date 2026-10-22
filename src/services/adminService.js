@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from './storageService';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 export const ADMIN_CREDENTIALS = {
   email: 'it24647@mbstu.ac.bd',
@@ -228,16 +229,24 @@ export const adminService = {
           if (
             activeMess.id === messId ||
             messId === 'mess-active' ||
-            (targetMess && activeMess.name === targetMess.name)
+            (targetMess && (activeMess.id === targetMess.id || activeMess.name === targetMess.name)) ||
+            (!targetMess && !rawRegistered)
           ) {
             isActive = true;
           }
         } catch (e) {}
+      } else {
+        isActive = true;
       }
 
-      // If active or target is active mess, wipe active storage keys and mark deleted
+      // If active or target is active mess, wipe ALL documents, user session, and mark deleted
       if (isActive || messId === 'mess-active') {
         localStorage.setItem('smm_active_mess_deleted', 'true');
+
+        // Permanently logout/terminate active user session so they cannot log in
+        localStorage.removeItem('smm_auth_user_v2');
+
+        // Wipe all primary documents and database tables
         localStorage.removeItem(STORAGE_KEYS.MESS);
         localStorage.removeItem(STORAGE_KEYS.MEMBERS);
         localStorage.removeItem(STORAGE_KEYS.MEALS);
@@ -248,6 +257,39 @@ export const adminService = {
         localStorage.removeItem(STORAGE_KEYS.BAZAR_SCHEDULE);
         localStorage.removeItem(STORAGE_KEYS.MEAL_REQUESTS);
         localStorage.removeItem(STORAGE_KEYS.ACTIVITIES);
+        localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+        localStorage.removeItem(STORAGE_KEYS.CLEAN_DATABASE_FLAG);
+
+        // Wipe all related dynamic documents & month archives (preserving only Super Admin session and registry)
+        try {
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (
+              key &&
+              key.startsWith('smm_') &&
+              !key.includes('super_admin') &&
+              key !== 'smm_active_mess_deleted' &&
+              key !== 'smm_all_registered_messes' &&
+              key !== 'smm_all_registered_members'
+            ) {
+              localStorage.removeItem(key);
+            }
+          }
+        } catch (e) {}
+
+        // Notify app components that the mess has been deleted
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('smm_mess_deleted'));
+        }
+      }
+
+      // If Supabase is configured, delete the mess in Postgres (cascades on delete to all documents)
+      if (isSupabaseConfigured && supabase) {
+        try {
+          supabase.from('messes').delete().eq('id', messId).then(() => {});
+        } catch (e) {
+          console.error('Error cascading delete in Supabase:', e);
+        }
       }
 
       return true;
