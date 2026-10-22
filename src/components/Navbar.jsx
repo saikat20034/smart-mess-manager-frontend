@@ -7,9 +7,7 @@ import {
   LogOut,
   ChevronDown,
   Building2,
-  LayoutGrid,
   Home,
-  HelpCircle,
   RefreshCw,
   User,
   Languages,
@@ -41,23 +39,6 @@ export const Navbar = ({ onToggleSidebar }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Track the previous non-summary route so clicking the profile icon again returns to the before state
-  const prevPathRef = React.useRef('/dashboard');
-  React.useEffect(() => {
-    if (location.pathname !== '/my-summary') {
-      prevPathRef.current = location.pathname;
-    }
-  }, [location.pathname]);
-
-  const handleProfileClick = (e) => {
-    if (e) e.preventDefault();
-    if (location.pathname === '/my-summary') {
-      navigate(prevPathRef.current || '/dashboard');
-    } else {
-      navigate('/my-summary');
-    }
-  };
 
   // Resolve active profile accurately, prioritizing actual mess members over stale demo defaults
   const activeUser = React.useMemo(() => {
@@ -144,25 +125,13 @@ export const Navbar = ({ onToggleSidebar }) => {
           </div>
         </div>
 
-        {/* Center Icons Navigation */}
+        {/* Center Icons Navigation: Only Home and Sync */}
         <div className="flex items-center gap-1 sm:gap-2 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
           <Link
             to="/dashboard"
-            title="Dashboard"
+            title={isBn ? "হোম পেজ" : "Home"}
             className={`p-2 rounded-xl transition-all cursor-pointer ${
               location.pathname === '/dashboard'
-                ? 'bg-rose-500 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </Link>
-
-          <Link
-            to="/"
-            title="Landing Page"
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
-              location.pathname === '/'
                 ? 'bg-rose-500 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60'
             }`}
@@ -170,44 +139,12 @@ export const Navbar = ({ onToggleSidebar }) => {
             <Home className="w-4 h-4" />
           </Link>
 
-          <a
-            href="/#faqs"
-            title="Help & FAQs"
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all cursor-pointer"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </a>
-
           <button
             onClick={handleRefresh}
-            title="Sync / Refresh Data"
+            title={isBn ? "ডাটা সিঙ্ক / রিফ্রেশ" : "Sync / Refresh Data"}
             className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleProfileClick}
-            title={
-              location.pathname === '/my-summary'
-                ? (isBn ? 'পূর্ববর্তী পেজে ফিরুন' : 'Back to previous page')
-                : (isBn ? `${displayName}-এর প্রোফাইল ও হিসাব` : `${displayName}'s Profile & Summary`)
-            }
-            className={`p-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
-              location.pathname === '/my-summary'
-                ? 'bg-rose-500 text-white shadow-xs ring-2 ring-rose-400 dark:ring-rose-500'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60'
-            }`}
-            aria-label="User profile and personal financial summary"
-          >
-            <Avatar
-              src={activeUser?.avatar}
-              name={displayName}
-              size="xs"
-              border={false}
-              className="w-5 h-5 text-[10px] shadow-2xs"
-            />
           </button>
         </div>
 
