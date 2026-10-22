@@ -27,7 +27,7 @@ import { MessProfilePictureModal } from './MessProfilePictureModal';
 import { Avatar } from './Avatar';
 
 export const Navbar = ({ onToggleSidebar }) => {
-  const { user, isManager, switchRole, logout, isDemoMode } = useAuth();
+  const { user, isManager, logout } = useAuth();
   const { selectedMonth, setSelectedMonth, mess, members, currentManager, refreshData, resetAllDemoData } = useMess();
   const { lang, toggleLanguage, t, isBn } = useLanguage();
   const { liveTimeStr, liveDateShort } = useLiveClock(isBn);
@@ -237,29 +237,12 @@ export const Navbar = ({ onToggleSidebar }) => {
                   </button>
                 )}
 
-                <button
-                  onClick={() => switchRole(isManager ? 'member' : 'manager')}
-                  className="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer"
-                >
-                  <span>{isBn ? 'রোল পরিবর্তন করুন' : 'Switch Role'}</span>
-                  <span className="text-[10px] font-bold text-rose-500">
-                    {isManager ? 'Member View' : 'Manager View'}
-                  </span>
-                </button>
-
                 <Link
                   to="/my-summary"
                   className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <User className="w-3.5 h-3.5 text-rose-500" />
                   <span>{isBn ? 'আমার হিসাব (Personal Summary)' : 'My Summary & Ledger'}</span>
-                </Link>
-
-                <Link
-                  to="/settings"
-                  className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <span>{t('settings')}</span>
                 </Link>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 my-1"></div>
