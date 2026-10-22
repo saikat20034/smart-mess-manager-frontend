@@ -42,6 +42,23 @@ export const Navbar = ({ onToggleSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Track the previous non-summary route so clicking the profile icon again returns to the before state
+  const prevPathRef = React.useRef('/dashboard');
+  React.useEffect(() => {
+    if (location.pathname !== '/my-summary') {
+      prevPathRef.current = location.pathname;
+    }
+  }, [location.pathname]);
+
+  const handleProfileClick = (e) => {
+    if (e) e.preventDefault();
+    if (location.pathname === '/my-summary') {
+      navigate(prevPathRef.current || '/dashboard');
+    } else {
+      navigate('/my-summary');
+    }
+  };
+
   // Resolve active profile accurately, prioritizing actual mess members over stale demo defaults
   const activeUser = React.useMemo(() => {
     // If user has a real custom email (not placeholder saikat@mess.ac.bd)
@@ -169,17 +186,29 @@ export const Navbar = ({ onToggleSidebar }) => {
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
           </button>
 
-          <Link
-            to="/my-summary"
-            title="My Account"
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            title={
               location.pathname === '/my-summary'
-                ? 'bg-rose-500 text-white shadow-xs'
+                ? (isBn ? 'পূর্ববর্তী পেজে ফিরুন' : 'Back to previous page')
+                : (isBn ? `${displayName}-এর প্রোফাইল ও হিসাব` : `${displayName}'s Profile & Summary`)
+            }
+            className={`p-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+              location.pathname === '/my-summary'
+                ? 'bg-rose-500 text-white shadow-xs ring-2 ring-rose-400 dark:ring-rose-500'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60'
             }`}
+            aria-label="User profile and personal financial summary"
           >
-            <User className="w-4 h-4" />
-          </Link>
+            <Avatar
+              src={activeUser?.avatar}
+              name={displayName}
+              size="xs"
+              border={false}
+              className="w-5 h-5 text-[10px] shadow-2xs"
+            />
+          </button>
         </div>
 
         {/* Right side: Language Switcher, Role, Personal Member/Manager Profile */}
@@ -280,6 +309,14 @@ export const Navbar = ({ onToggleSidebar }) => {
                     {isManager ? 'Member View' : 'Manager View'}
                   </span>
                 </button>
+
+                <Link
+                  to="/my-summary"
+                  className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  <User className="w-3.5 h-3.5 text-rose-500" />
+                  <span>{isBn ? 'আমার হিসাব (Personal Summary)' : 'My Summary & Ledger'}</span>
+                </Link>
 
                 <Link
                   to="/settings"
