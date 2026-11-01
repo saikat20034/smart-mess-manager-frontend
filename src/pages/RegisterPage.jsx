@@ -157,7 +157,10 @@ export const RegisterPage = () => {
             email: formData.email,
             role: 'member',
             status: 'active',
-            avatar: res.user.avatar
+            avatar: res.user.avatar,
+            mess_id: targetMess?.id,
+            mess_name: targetMess?.name,
+            invite_code: targetMess?.invite_code
           });
         }
 

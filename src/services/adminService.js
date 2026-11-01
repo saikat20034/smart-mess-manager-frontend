@@ -194,10 +194,91 @@ export const adminService = {
     };
   },
 
+  // Sync all messes and all members directly from Supabase PostgreSQL
+  syncFromSupabase: async () => {
+    if (!isSupabaseConfigured || !supabase) return false;
+    try {
+      const { data: messesData, error: messesErr } = await supabase
+        .from('messes')
+        .select('*, mess_members (*)')
+        .order('created_at', { ascending: false });
+
+      if (!messesErr && Array.isArray(messesData)) {
+        const formatted = messesData.map((m) => {
+          const members = m.mess_members || [];
+          const manager = members.find((u) => u.role === 'manager') || members[0];
+          return {
+            id: m.id,
+            name: m.name,
+            subtitle: 'সক্রিয় মেস',
+            location: m.address || 'বাংলাদেশ',
+            invite_code: m.invite_code,
+            manager_name: manager?.name || '—',
+            manager_email: manager?.email || '—',
+            manager_phone: manager?.phone || '—',
+            members_count: members.length,
+            created_at: (m.created_at || '').split('T')[0] || new Date().toISOString().split('T')[0],
+            last_active: (m.updated_at || m.created_at || '').split('T')[0] || new Date().toISOString().split('T')[0],
+            total_meals: 0,
+            total_expenses: 0,
+            total_deposits: 0,
+            status: 'Active'
+          };
+        });
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('smm_all_registered_messes', JSON.stringify(formatted));
+
+          const allUsers = [];
+          messesData.forEach((m) => {
+            (m.mess_members || []).forEach((mem) => {
+              allUsers.push({
+                id: mem.id,
+                name: mem.name,
+                mess_name: m.name,
+                mess_id: m.id,
+                role: mem.role || 'member',
+                email: mem.email || '—',
+                phone: mem.phone || '—',
+                joined_at: (mem.joined_at || '').split('T')[0] || new Date().toISOString().split('T')[0],
+                status: mem.status || 'active',
+                avatar: mem.avatar || ''
+              });
+            });
+          });
+          localStorage.setItem('smm_all_registered_members', JSON.stringify(allUsers));
+        }
+        return true;
+      }
+    } catch (e) {
+      console.warn('adminService.syncFromSupabase error:', e);
+    }
+    return false;
+  },
+
   // Delete a mess and all its associated data from the platform database
   deleteMess: (messId) => {
     try {
       if (typeof localStorage === 'undefined') return false;
+
+      // 0. If Supabase is configured, delete mess from PostgreSQL (cascading deletes all children)
+      if (isSupabaseConfigured && supabase) {
+        (async () => {
+          try {
+            if (messId && messId !== 'mess-active') {
+              await supabase.from('messes').delete().eq('id', messId);
+            }
+            const rawActiveMess = localStorage.getItem(STORAGE_KEYS.MESS);
+            if (rawActiveMess) {
+              const parsed = JSON.parse(rawActiveMess);
+              if (parsed?.id && (parsed.id === messId || messId === 'mess-active')) {
+                await supabase.from('messes').delete().eq('id', parsed.id);
+              }
+            }
+          } catch (sbErr) {
+            console.error('Supabase mess delete error:', sbErr);
+          }
+        })();
+      }
 
       // 1. Remove from all registered messes registry
       const rawRegistered = localStorage.getItem('smm_all_registered_messes');

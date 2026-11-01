@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import {
   Building2,
   Users,
@@ -59,6 +60,29 @@ export const AdminDashboardPage = () => {
   const [copied, setCopied] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Sync with Supabase on mount and listen to real-time events
+  useEffect(() => {
+    let mounted = true;
+    if (isSupabaseConfigured && supabase) {
+      adminService.syncFromSupabase().then(() => {
+        if (mounted) setRefreshTrigger((k) => k + 1);
+      });
+
+      const channel = supabase
+        .channel('admin-dashboard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
+          await adminService.syncFromSupabase();
+          if (mounted) setRefreshTrigger((k) => k + 1);
+        })
+        .subscribe();
+
+      return () => {
+        mounted = false;
+        supabase.removeChannel(channel);
+      };
+    }
+  }, []);
+
   // Mess deletion state
   const [messToDelete, setMessToDelete] = useState(null);
   const [deleteSuccessToast, setDeleteSuccessToast] = useState('');
@@ -69,13 +93,16 @@ export const AdminDashboardPage = () => {
   const users = useMemo(() => adminService.getAllUsers(), [refreshTrigger]);
   const stats = useMemo(() => adminService.getPlatformStats(), [refreshTrigger]);
 
-  const handleConfirmDeleteMess = () => {
+  const handleConfirmDeleteMess = async () => {
     if (!messToDelete) return;
     setIsDeleting(true);
     const success = adminService.deleteMess(messToDelete.id);
     if (success) {
       const deletedName = messToDelete.name;
       setMessToDelete(null);
+      if (isSupabaseConfigured && supabase) {
+        await adminService.syncFromSupabase();
+      }
       setRefreshTrigger((prev) => prev + 1);
       setDeleteSuccessToast(`"${deletedName}" মেসটি ডাটাবেস থেকে সফলভাবে মুছে ফেলা হয়েছে!`);
       setTimeout(() => setDeleteSuccessToast(''), 4000);

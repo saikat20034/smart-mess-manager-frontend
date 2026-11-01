@@ -278,6 +278,47 @@ export function createNewFreshMess({ messName, managerUser }) {
   setLocalItem(STORAGE_KEYS.MESS, freshMess);
   setLocalItem(STORAGE_KEYS.MEMBERS, initialMembers);
 
+  // If Supabase is configured, sync fresh mess and manager directly to cloud
+  if (isSupabaseConfigured && supabase) {
+    (async () => {
+      try {
+        const { error: messErr } = await supabase.from('messes').insert({
+          id: freshMess.id,
+          name: freshMess.name,
+          address: freshMess.address,
+          currency: freshMess.currency,
+          invite_code: freshMess.invite_code,
+          month_start_day: freshMess.month_start_day,
+          breakfast_unit: freshMess.breakfast_unit,
+          lunch_unit: freshMess.lunch_unit,
+          dinner_unit: freshMess.dinner_unit,
+          shared_expense_policy: freshMess.shared_expense_policy
+        });
+        if (messErr) {
+          console.warn('Supabase createNewFreshMess insert mess error:', messErr);
+        }
+
+        if (managerUser) {
+          const { error: memErr } = await supabase.from('mess_members').insert({
+            id: managerUser.id,
+            mess_id: freshMess.id,
+            name: managerUser.name,
+            phone: managerUser.phone || '',
+            email: managerUser.email || '',
+            role: 'manager',
+            status: 'active',
+            avatar: managerUser.avatar || ''
+          });
+          if (memErr) {
+            console.warn('Supabase createNewFreshMess insert manager error:', memErr);
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase createNewFreshMess sync error:', err);
+      }
+    })();
+  }
+
   // Sync with Super Admin all messes registry
   const allMesses = getLocalItem(STORAGE_KEYS.ALL_MESSES, []);
   const updatedAll = [
@@ -358,6 +399,24 @@ export const dataService = {
     const current = getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
     const updated = { ...current, ...updates, updated_at: new Date().toISOString() };
     setLocalItem(STORAGE_KEYS.MESS, updated);
+
+    if (isSupabaseConfigured && supabase && updated.id) {
+      try {
+        await supabase.from('messes').update({
+          name: updated.name,
+          address: updated.address,
+          month_start_day: updated.month_start_day,
+          breakfast_unit: updated.breakfast_unit,
+          lunch_unit: updated.lunch_unit,
+          dinner_unit: updated.dinner_unit,
+          shared_expense_policy: updated.shared_expense_policy,
+          updated_at: updated.updated_at
+        }).eq('id', updated.id);
+      } catch (err) {
+        console.warn('Supabase updateMess error:', err);
+      }
+    }
+
     this.logActivity('UPDATE_SETTINGS', 'মেস সেটিংস আপডেট', 'মেস তথ্য ও নিয়ম পরিবর্তন করা হয়েছে');
     return updated;
   },
@@ -366,8 +425,22 @@ export const dataService = {
   async getMembers() {
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('mess_members').select('*').order('joined_at', { ascending: true });
-        if (!error && data) return data;
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('mess_members').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query.order('joined_at', { ascending: true });
+        if (!error && data) {
+          if (data.length > 0) {
+            setLocalItem(STORAGE_KEYS.MEMBERS, data);
+            return data;
+          } else if (activeMess?.id) {
+            setLocalItem(STORAGE_KEYS.MEMBERS, []);
+            return [];
+          }
+        }
       } catch (err) {
         console.warn('Supabase getMembers network error, using local data:', err);
       }
@@ -410,16 +483,24 @@ export const dataService = {
       try {
         const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
         const activeMess = rawMess ? JSON.parse(rawMess) : null;
-        if (activeMess?.id) {
-          await supabase.from('mess_members').insert({
-            mess_id: activeMess.id,
+        const targetMessId = memberData.mess_id || activeMess?.id;
+        if (targetMessId) {
+          const { data, error } = await supabase.from('mess_members').insert({
+            id: newMember.id,
+            mess_id: targetMessId,
             name: newMember.name,
             phone: newMember.phone || '',
             email: newMember.email || '',
             role: newMember.role,
             status: newMember.status,
-            room_number: newMember.room_number || ''
-          });
+            room_number: newMember.room_number || '',
+            avatar: newMember.avatar || ''
+          }).select().single();
+          if (error) {
+            console.error('Supabase addMember error:', error);
+          } else if (data?.id) {
+            newMember.id = data.id;
+          }
         }
       } catch (err) {
         console.error('Supabase addMember error:', err);
@@ -501,6 +582,18 @@ export const dataService = {
       }
       members[index] = { ...members[index], ...updates };
       setLocalItem(STORAGE_KEYS.MEMBERS, members);
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          supabase.from('mess_members').update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          }).eq('id', id).then(() => {});
+        } catch (err) {
+          console.warn('Supabase updateMember error:', err);
+        }
+      }
+
       this.logActivity('UPDATE_MEMBER', `মেম্বার আপডেট: ${members[index].name}`, `স্ট্যাটাস: ${members[index].status}`);
       return members[index];
     }
@@ -526,6 +619,17 @@ export const dataService = {
 
     setLocalItem(STORAGE_KEYS.MEMBERS, updatedMembers);
 
+    if (isSupabaseConfigured && supabase) {
+      try {
+        if (previousManager?.id) {
+          supabase.from('mess_members').update({ role: 'member' }).eq('id', previousManager.id).then(() => {});
+        }
+        supabase.from('mess_members').update({ role: 'manager' }).eq('id', newManagerId).then(() => {});
+      } catch (err) {
+        console.warn('Supabase transferManagerRole error:', err);
+      }
+    }
+
     const prevName = previousManager?.name || currentManagerName || 'পূর্ববর্তী ম্যানেজার';
     this.logActivity(
       'TRANSFER_MANAGER',
@@ -546,11 +650,48 @@ export const dataService = {
 
   // Categories
   async getCategories() {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('expense_categories').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query;
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.CATEGORIES, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getCategories error:', err);
+      }
+    }
     return getLocalItem(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   },
 
   // Meals
   async getMeals(monthYear) {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('meal_entries').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        if (monthYear) {
+          query = query.gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`);
+        }
+        const { data, error } = await query;
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.MEALS, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getMeals error:', err);
+      }
+    }
     const allMeals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
     if (!monthYear) return allMeals;
     return allMeals.filter((m) => m.date && m.date.startsWith(monthYear));
@@ -560,25 +701,69 @@ export const dataService = {
     const allMeals = getLocalItem(STORAGE_KEYS.MEALS, INITIAL_MEALS);
     const filtered = allMeals.filter((m) => m.date !== date);
 
-    memberMealEntries.forEach((entry) => {
-      filtered.push({
-        id: `meal-${date}-${entry.member_id}`,
-        date,
-        member_id: entry.member_id,
-        breakfast: Number(entry.breakfast) || 0,
-        lunch: Number(entry.lunch) || 0,
-        dinner: Number(entry.dinner) || 0,
-        notes: entry.notes || ''
-      });
-    });
+    const formattedEntries = memberMealEntries.map((entry) => ({
+      id: entry.id || `meal-${date}-${entry.member_id}`,
+      date,
+      member_id: entry.member_id,
+      breakfast: Number(entry.breakfast) || 0,
+      lunch: Number(entry.lunch) || 0,
+      dinner: Number(entry.dinner) || 0,
+      total_units: (Number(entry.breakfast) || 0) * 1.0 + (Number(entry.lunch) || 0) * 1.0 + (Number(entry.dinner) || 0) * 1.0,
+      notes: entry.notes || ''
+    }));
 
+    formattedEntries.forEach((e) => filtered.push(e));
     setLocalItem(STORAGE_KEYS.MEALS, filtered);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          const rows = formattedEntries.map((e) => ({
+            id: e.id,
+            mess_id: activeMess.id,
+            member_id: e.member_id,
+            date: e.date,
+            breakfast: e.breakfast,
+            lunch: e.lunch,
+            dinner: e.dinner,
+            total_units: e.total_units,
+            notes: e.notes
+          }));
+          supabase.from('meal_entries').upsert(rows, { onConflict: 'mess_id,member_id,date' }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase saveMealsBulk error:', err);
+      }
+    }
+
     this.logActivity('RECORD_MEALS', `${date} এর মিল সংরক্ষিত`, `${memberMealEntries.length} জন সদস্যের মিল আপডেট`);
     return filtered.filter((m) => m.date === date);
   },
 
   // Expenses
   async getExpenses(monthYear) {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('expenses').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        if (monthYear) {
+          query = query.gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`);
+        }
+        const { data, error } = await query.order('date', { ascending: false });
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.EXPENSES, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getExpenses error:', err);
+      }
+    }
     const all = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
     if (!monthYear) return all;
     return all.filter((e) => e.date && e.date.startsWith(monthYear));
@@ -586,13 +771,37 @@ export const dataService = {
 
   async addExpense(expenseData) {
     const newExpense = {
-      id: `exp-${Date.now()}`,
+      id: expenseData.id || `exp-${Date.now()}`,
       created_at: new Date().toISOString(),
       ...expenseData
     };
     const expenses = getLocalItem(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
     expenses.unshift(newExpense);
     setLocalItem(STORAGE_KEYS.EXPENSES, expenses);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('expenses').insert({
+            id: newExpense.id,
+            mess_id: activeMess.id,
+            title: newExpense.title,
+            amount: Number(newExpense.amount) || 0,
+            date: newExpense.date || new Date().toISOString().split('T')[0],
+            paid_by_member_id: newExpense.paid_by_member_id || null,
+            paid_by_name: newExpense.paid_by_name || null,
+            is_meal_related: newExpense.is_meal_related !== false,
+            category_id: newExpense.category_id || null,
+            notes: newExpense.notes || ''
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase addExpense error:', err);
+      }
+    }
+
     this.logActivity(
       'RECORD_EXPENSE',
       `খরচ যুক্ত: ${newExpense.title}`,
@@ -607,6 +816,18 @@ export const dataService = {
     if (index !== -1) {
       expenses[index] = { ...expenses[index], ...updates };
       setLocalItem(STORAGE_KEYS.EXPENSES, expenses);
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          supabase.from('expenses').update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          }).eq('id', id).then(() => {});
+        } catch (err) {
+          console.warn('Supabase updateExpense error:', err);
+        }
+      }
+
       this.logActivity('UPDATE_EXPENSE', `খরচ সংশোধন: ${expenses[index].title}`, `৳ ${expenses[index].amount}`);
       return expenses[index];
     }
@@ -618,6 +839,15 @@ export const dataService = {
     const target = expenses.find((e) => e.id === id);
     const filtered = expenses.filter((e) => e.id !== id);
     setLocalItem(STORAGE_KEYS.EXPENSES, filtered);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        supabase.from('expenses').delete().eq('id', id).then(() => {});
+      } catch (err) {
+        console.warn('Supabase deleteExpense error:', err);
+      }
+    }
+
     if (target) {
       this.logActivity('DELETE_EXPENSE', `খরচ বাতিল: ${target.title}`, `৳ ${target.amount}`);
     }
@@ -626,6 +856,26 @@ export const dataService = {
 
   // Deposits
   async getDeposits(monthYear) {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('deposits').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        if (monthYear) {
+          query = query.gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`);
+        }
+        const { data, error } = await query.order('date', { ascending: false });
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.DEPOSITS, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getDeposits error:', err);
+      }
+    }
     const all = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
     if (!monthYear) return all;
     return all.filter((d) => d.date && d.date.startsWith(monthYear));
@@ -633,13 +883,36 @@ export const dataService = {
 
   async addDeposit(depositData) {
     const newDeposit = {
-      id: `dep-${Date.now()}`,
+      id: depositData.id || `dep-${Date.now()}`,
       created_at: new Date().toISOString(),
       ...depositData
     };
     const deposits = getLocalItem(STORAGE_KEYS.DEPOSITS, INITIAL_DEPOSITS);
     deposits.unshift(newDeposit);
     setLocalItem(STORAGE_KEYS.DEPOSITS, deposits);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('deposits').insert({
+            id: newDeposit.id,
+            mess_id: activeMess.id,
+            member_id: newDeposit.member_id,
+            member_name: newDeposit.member_name || '',
+            amount: Number(newDeposit.amount) || 0,
+            date: newDeposit.date || new Date().toISOString().split('T')[0],
+            payment_method: newDeposit.payment_method || 'Cash',
+            transaction_ref: newDeposit.transaction_ref || '',
+            notes: newDeposit.notes || ''
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase addDeposit error:', err);
+      }
+    }
+
     this.logActivity(
       'RECORD_DEPOSIT',
       `${newDeposit.member_name} এর জমা`,
@@ -654,6 +927,18 @@ export const dataService = {
     if (index !== -1) {
       deposits[index] = { ...deposits[index], ...updates };
       setLocalItem(STORAGE_KEYS.DEPOSITS, deposits);
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          supabase.from('deposits').update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          }).eq('id', id).then(() => {});
+        } catch (err) {
+          console.warn('Supabase updateDeposit error:', err);
+        }
+      }
+
       return deposits[index];
     }
     return null;
@@ -664,6 +949,15 @@ export const dataService = {
     const target = deposits.find((d) => d.id === id);
     const filtered = deposits.filter((d) => d.id !== id);
     setLocalItem(STORAGE_KEYS.DEPOSITS, filtered);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        supabase.from('deposits').delete().eq('id', id).then(() => {});
+      } catch (err) {
+        console.warn('Supabase deleteDeposit error:', err);
+      }
+    }
+
     if (target) {
       this.logActivity('DELETE_DEPOSIT', `জমা মুছে ফেলা: ৳ ${target.amount}`, `${target.member_name}`);
     }
@@ -672,6 +966,23 @@ export const dataService = {
 
   // Settlements
   async getSettlements() {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('monthly_settlements').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.SETTLEMENTS, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getSettlements error:', err);
+      }
+    }
     return getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
   },
 
@@ -700,13 +1011,44 @@ export const dataService = {
   async finalizeSettlement(settlementData) {
     const settlements = getLocalItem(STORAGE_KEYS.SETTLEMENTS, INITIAL_SETTLEMENTS);
     const record = {
-      id: `set-${Date.now()}`,
+      id: settlementData.id || `set-${Date.now()}`,
       is_finalized: true,
       finalized_at: new Date().toISOString(),
       ...settlementData
     };
     settlements.unshift(record);
     setLocalItem(STORAGE_KEYS.SETTLEMENTS, settlements);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('monthly_settlements').insert({
+            id: record.id,
+            mess_id: activeMess.id,
+            month: Number(record.month) || 1,
+            year: Number(record.year) || new Date().getFullYear(),
+            month_year: record.monthYear || `${record.year}-${String(record.month).padStart(2, '0')}`,
+            total_meal_units: Number(record.totalMealUnits) || 0,
+            total_meal_expenses: Number(record.mealExpenses) || 0,
+            total_shared_expenses: Number(record.sharedExpenses) || 0,
+            meal_rate: Number(record.mealRate) || 0,
+            total_deposits: Number(record.totalDeposits) || 0,
+            cash_in_hand: Number(record.cashInHand) || 0,
+            outstanding_dues: Number(record.outstandingDues) || 0,
+            total_credits: Number(record.totalCredits) || 0,
+            is_finalized: true,
+            finalized_by_name: record.finalized_by_name || 'Manager',
+            finalized_at: record.finalized_at,
+            notes: record.notes || ''
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase finalizeSettlement error:', err);
+      }
+    }
+
     this.logActivity(
       'FINALIZE_SETTLEMENT',
       `${settlementData.month}/${settlementData.year} এর চূড়ান্ত হিসাব সম্পন্ন`,
@@ -746,6 +1088,21 @@ export const dataService = {
     });
     setLocalItem(STORAGE_KEYS.SETTLEMENTS, updatedSettlements);
 
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('meal_entries').delete().eq('mess_id', activeMess.id).gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`).then(() => {});
+          supabase.from('expenses').delete().eq('mess_id', activeMess.id).gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`).then(() => {});
+          supabase.from('deposits').delete().eq('mess_id', activeMess.id).gte('date', `${monthYear}-01`).lte('date', `${monthYear}-31`).then(() => {});
+          supabase.from('monthly_settlements').delete().eq('mess_id', activeMess.id).eq('year', yNum).eq('month', mNum).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase deleteMonth error:', err);
+      }
+    }
+
     this.logActivity(
       'DELETE_MONTH',
       `সম্পূর্ণ মাসের হিসাব মুছে ফেলা হয়েছে: ${monthYear}`,
@@ -757,18 +1114,56 @@ export const dataService = {
 
   // Bazar Checklist (বাজারের ফর্দ)
   async getBazarList() {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('bazar_items').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.BAZAR_LIST, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getBazarList error:', err);
+      }
+    }
     return getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
   },
 
   async addBazarItem(item) {
     const list = getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
     const newItem = {
-      id: `bitem-${Date.now()}`,
+      id: item.id || `bitem-${Date.now()}`,
       completed: false,
       ...item
     };
     list.push(newItem);
     setLocalItem(STORAGE_KEYS.BAZAR_LIST, list);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('bazar_items').insert({
+            id: newItem.id,
+            mess_id: activeMess.id,
+            name: newItem.name,
+            quantity: newItem.quantity || '',
+            estimated_cost: Number(newItem.estimatedCost) || 0,
+            completed: false,
+            buyer_name: newItem.buyer || ''
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase addBazarItem error:', err);
+      }
+    }
+
     return newItem;
   },
 
@@ -778,6 +1173,14 @@ export const dataService = {
     if (target) {
       target.completed = !target.completed;
       setLocalItem(STORAGE_KEYS.BAZAR_LIST, list);
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          supabase.from('bazar_items').update({ completed: target.completed }).eq('id', id).then(() => {});
+        } catch (err) {
+          console.warn('Supabase toggleBazarItem error:', err);
+        }
+      }
     }
     return list;
   },
@@ -786,23 +1189,69 @@ export const dataService = {
     const list = getLocalItem(STORAGE_KEYS.BAZAR_LIST, INITIAL_BAZAR_LIST);
     const filtered = list.filter((i) => i.id !== id);
     setLocalItem(STORAGE_KEYS.BAZAR_LIST, filtered);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        supabase.from('bazar_items').delete().eq('id', id).then(() => {});
+      } catch (err) {
+        console.warn('Supabase deleteBazarItem error:', err);
+      }
+    }
+
     return filtered;
   },
 
   // Bazar Duty Schedule (বাজার শিডিউল)
   async getBazarSchedule() {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('bazar_schedules').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query.order('date', { ascending: true });
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getBazarSchedule error:', err);
+      }
+    }
     return getLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
   },
 
   async addBazarScheduleEntry(entry) {
     const schedule = getLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, INITIAL_BAZAR_SCHEDULE);
     const newEntry = {
-      id: `bsched-${Date.now()}`,
+      id: entry.id || `bsched-${Date.now()}`,
       status: 'Upcoming',
       ...entry
     };
     schedule.push(newEntry);
     setLocalItem(STORAGE_KEYS.BAZAR_SCHEDULE, schedule);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('bazar_schedules').insert({
+            id: newEntry.id,
+            mess_id: activeMess.id,
+            date: newEntry.date,
+            member_id: newEntry.member_id || null,
+            member_name: newEntry.member_name || '',
+            status: newEntry.status || 'Upcoming'
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase addBazarScheduleEntry error:', err);
+      }
+    }
+
     this.logActivity('BAZAR_DUTY', `বাজার দায়িত্ব নির্ধারিত: ${newEntry.member_name}`, `তারিখ: ${newEntry.date}`);
     return newEntry;
   },
@@ -820,6 +1269,23 @@ export const dataService = {
 
   // Activities
   async getActivityLogs() {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        let query = supabase.from('audit_logs').select('*');
+        if (activeMess?.id) {
+          query = query.eq('mess_id', activeMess.id);
+        }
+        const { data, error } = await query.order('timestamp', { ascending: false }).limit(50);
+        if (!error && data && data.length > 0) {
+          setLocalItem(STORAGE_KEYS.ACTIVITIES, data);
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase getActivityLogs error:', err);
+      }
+    }
     return getLocalItem(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES);
   },
 
@@ -835,6 +1301,26 @@ export const dataService = {
     logs.unshift(newLog);
     if (logs.length > 50) logs.pop();
     setLocalItem(STORAGE_KEYS.ACTIVITIES, logs);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
+        const activeMess = rawMess ? JSON.parse(rawMess) : null;
+        if (activeMess?.id) {
+          supabase.from('audit_logs').insert({
+            id: newLog.id,
+            mess_id: activeMess.id,
+            action: newLog.action,
+            title: newLog.title,
+            details: newLog.details,
+            timestamp: newLog.timestamp
+          }).then(() => {});
+        }
+      } catch (err) {
+        console.warn('Supabase logActivity error:', err);
+      }
+    }
+
     return newLog;
   }
 };

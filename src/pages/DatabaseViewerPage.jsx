@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Database,
@@ -28,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { STORAGE_KEYS } from '../services/storageService';
 import {
+  supabase,
   isSupabaseConfigured,
   getSupabaseCredentials,
   setCustomSupabaseConfig,
@@ -37,60 +38,70 @@ import {
 const TABLE_DEFINITIONS = [
   {
     key: STORAGE_KEYS.MEMBERS,
+    supabaseTable: 'mess_members',
     label: 'সদস্য ও ম্যানেজার তালিকা',
     labelEn: 'Mess Members & Roles',
     desc: 'সকল সদস্যের নাম, রোল (ম্যানেজার/মেম্বার), ফোন, ইমেইল ও প্রোফাইল'
   },
   {
     key: STORAGE_KEYS.MEALS,
+    supabaseTable: 'meal_entries',
     label: 'দৈনিক মিল রেকর্ডসমূহ',
     labelEn: 'Daily Meals Matrix',
     desc: 'সকাল, দুপুর ও রাতের মিলের হিসাব (০.২৫ নির্ভুল স্টেপসহ)'
   },
   {
     key: STORAGE_KEYS.EXPENSES,
+    supabaseTable: 'expenses',
     label: 'বাজার ও যাবতীয় খরচ',
     labelEn: 'Mess Expenses Ledger',
     desc: 'দৈনিক বাজার, খালার বেতন, গ্যাস, ওয়াইফাই ও অন্যান্য খরচের হিসাব'
   },
   {
     key: STORAGE_KEYS.DEPOSITS,
+    supabaseTable: 'deposits',
     label: 'জমা ও পেমেন্ট হিস্ট্রি',
     labelEn: 'Deposits & Advances',
     desc: 'সদস্যদের বিকাশ, নগদ ও ক্যাশ জমার হিস্ট্রি এবং ট্রানজেকশন আইডি'
   },
   {
     key: STORAGE_KEYS.BAZAR_LIST,
+    supabaseTable: 'bazar_items',
     label: 'বাজারের ফর্দ',
     labelEn: 'Bazar Grocery Checklist',
     desc: 'চলতি কেনাকাটার ফর্দ, আনুমানিক খরচ ও ক্রয় স্ট্যাটাস'
   },
   {
     key: STORAGE_KEYS.BAZAR_SCHEDULE,
+    supabaseTable: 'bazar_schedules',
     label: 'বাজার ডিউটি শিডিউল',
     labelEn: 'Bazar Duty Schedule',
     desc: 'কার কোন তারিখে বাজার করার দায়িত্ব তার বিস্তারিত তালিকা'
   },
   {
     key: STORAGE_KEYS.MESS,
+    supabaseTable: 'messes',
     label: 'মেস কনফিগারেশন ও রুলস',
     labelEn: 'Mess Configuration',
     desc: 'মেসের নাম, ঠিকানা, মিল ইউনিট রেসিও, ইনভাইট কোড ও নীতিমালা'
   },
   {
     key: STORAGE_KEYS.SETTLEMENTS,
+    supabaseTable: 'monthly_settlements',
     label: 'মাসিক ফাইনাল সেটেলমেন্ট',
     labelEn: 'Monthly Settlement Audits',
     desc: 'মাস শেষে ফাইনাল অডিট হিসাব, মোট মিল রেট ও ব্যালেন্স রসিদ'
   },
   {
     key: STORAGE_KEYS.ALL_MESSES,
+    supabaseTable: 'messes',
     label: 'নিবন্ধিত সকল মেস (All Messes)',
     labelEn: 'All Registered Messes',
     desc: 'সিস্টেমে রেজিস্টার্ড সকল মেসের নাম, ইনভাইট কোড ও সদস্য সংখ্যা'
   },
   {
     key: 'smm_all_registered_members',
+    supabaseTable: 'mess_members',
     label: 'রেজিস্টার্ড মেম্বারস ডিরেক্টরি',
     labelEn: 'All Joined Members Directory',
     desc: 'ইনভাইট কোডের মাধ্যমে রেজিস্ট্রেশন করা সকল ব্যবহারকারীর তথ্য'
@@ -114,6 +125,84 @@ export const DatabaseViewerPage = () => {
   const [sbUrlInput, setSbUrlInput] = useState(() => getSupabaseCredentials().url || '');
   const [sbKeyInput, setSbKeyInput] = useState(() => getSupabaseCredentials().key || '');
 
+  // Live Cloud Database (Supabase PostgreSQL) state
+  const [cloudData, setCloudData] = useState({});
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [dataSource, setDataSource] = useState(isSupabaseConfigured ? 'cloud' : 'local');
+
+  // Fetch live table data directly from Supabase
+  const fetchCloudTable = useCallback(async (tableKey) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const def = TABLE_DEFINITIONS.find((t) => t.key === tableKey);
+    if (!def?.supabaseTable) return;
+
+    setCloudLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from(def.supabaseTable)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        setCloudData((prev) => ({ ...prev, [tableKey]: data }));
+      }
+    } catch (e) {
+      console.warn('Failed to fetch cloud table:', e);
+    } finally {
+      setCloudLoading(false);
+    }
+  }, []);
+
+  // Fetch all cloud tables on load
+  const fetchAllCloudTables = useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase) return;
+    setCloudLoading(true);
+    try {
+      await Promise.all(
+        TABLE_DEFINITIONS.map(async (def) => {
+          if (!def.supabaseTable) return;
+          const { data, error } = await supabase
+            .from(def.supabaseTable)
+            .select('*');
+          if (!error && Array.isArray(data)) {
+            setCloudData((prev) => ({ ...prev, [def.key]: data }));
+          }
+        })
+      );
+    } catch (e) {
+      console.warn('Failed to fetch all cloud tables:', e);
+    } finally {
+      setCloudLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      fetchAllCloudTables();
+    }
+  }, [fetchAllCloudTables, refreshKey]);
+
+  useEffect(() => {
+    if (isSupabaseConfigured && dataSource === 'cloud') {
+      fetchCloudTable(activeTableKey);
+    }
+  }, [activeTableKey, dataSource, fetchCloudTable, refreshKey]);
+
+  // Real-time subscription for live database viewer
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const channel = supabase
+      .channel('db-viewer-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        fetchAllCloudTables();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAllCloudTables]);
+
   // Read all tables from localStorage
   const databaseData = useMemo(() => {
     if (typeof localStorage === 'undefined') return {};
@@ -132,7 +221,8 @@ export const DatabaseViewerPage = () => {
   // Total records count across all tables
   const totalRecords = useMemo(() => {
     let count = 0;
-    Object.values(databaseData).forEach((val) => {
+    const sourceData = (dataSource === 'cloud' && isSupabaseConfigured) ? cloudData : databaseData;
+    Object.values(sourceData).forEach((val) => {
       if (Array.isArray(val)) {
         count += val.length;
       } else if (val && typeof val === 'object') {
@@ -140,10 +230,15 @@ export const DatabaseViewerPage = () => {
       }
     });
     return count;
-  }, [databaseData]);
+  }, [dataSource, cloudData, databaseData]);
 
   const activeTableDef = TABLE_DEFINITIONS.find((t) => t.key === activeTableKey) || TABLE_DEFINITIONS[0];
-  const activeTableRawData = databaseData[activeTableKey];
+  const activeTableRawData = useMemo(() => {
+    if (dataSource === 'cloud' && isSupabaseConfigured && cloudData[activeTableKey] !== undefined) {
+      return cloudData[activeTableKey];
+    }
+    return databaseData[activeTableKey];
+  }, [dataSource, cloudData, activeTableKey, databaseData]);
 
   // Filtered rows for active table
   const filteredRows = useMemo(() => {
@@ -526,9 +621,12 @@ export const DatabaseViewerPage = () => {
           <div className="flex items-center gap-2 min-w-max">
             {TABLE_DEFINITIONS.map((tab) => {
               const isActive = tab.key === activeTableKey;
-              const rowCount = Array.isArray(databaseData[tab.key])
-                ? databaseData[tab.key].length
-                : (databaseData[tab.key] ? 1 : 0);
+              const currentTableData = (dataSource === 'cloud' && isSupabaseConfigured && cloudData[tab.key] !== undefined)
+                ? cloudData[tab.key]
+                : databaseData[tab.key];
+              const rowCount = Array.isArray(currentTableData)
+                ? currentTableData.length
+                : (currentTableData ? 1 : 0);
 
               return (
                 <button
@@ -562,13 +660,22 @@ export const DatabaseViewerPage = () => {
         {/* Action & Filter Bar */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                 {activeTableDef.label}
               </h2>
               <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                {activeTableDef.key}
+                {activeTableDef.supabaseTable ? `public.${activeTableDef.supabaseTable}` : activeTableDef.key}
               </span>
+              {isSupabaseConfigured && (
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  dataSource === 'cloud'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300'
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'
+                }`}>
+                  {dataSource === 'cloud' ? '● Supabase Cloud Live' : '● Local Cache'}
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               {activeTableDef.desc}
@@ -576,6 +683,38 @@ export const DatabaseViewerPage = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Cloud / Local Source Toggle */}
+            {isSupabaseConfigured && (
+              <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setDataSource('cloud')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    dataSource === 'cloud'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                  title="View live rows from Supabase PostgreSQL database"
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span>Cloud DB</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDataSource('local')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    dataSource === 'local'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                  title="View cached records from localStorage"
+                >
+                  <Server className="w-3.5 h-3.5" />
+                  <span>Local</span>
+                </button>
+              </div>
+            )}
+
             {/* Search within table */}
             <div className="relative min-w-[200px]">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />

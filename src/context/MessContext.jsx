@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { dataService, resetDemoData, createNewFreshMess, cleanDatabase } from '../services/storageService';
 import { calculateMemberBalances } from '../utils/calculations';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 const MessContext = createContext(null);
 
@@ -26,8 +27,8 @@ export const MessProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Load all data
-  const refreshData = useCallback(async () => {
-    setLoading(true);
+  const refreshData = useCallback(async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const [
         messData,
@@ -74,12 +75,28 @@ export const MessProvider = ({ children }) => {
     } catch (err) {
       console.error('Error refreshing mess data:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }, [selectedMonth]);
 
   useEffect(() => {
     refreshData();
+  }, [refreshData]);
+
+  // Real-time Cloud Sync with Supabase (Multi-device auto refresh)
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    const channel = supabase
+      .channel('mess-realtime-sync')
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        refreshData(true);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [refreshData]);
 
   // Listen for mess deletion event across components & windows
