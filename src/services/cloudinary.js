@@ -5,10 +5,7 @@
  */
 
 export const getCloudinaryConfig = () => {
-  const envCloudName = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME) || '';
-  const envPreset = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CLOUDINARY_UPLOAD_PRESET) || '';
-
-  let storedConfig = {};
+  let storedConfig = null;
   try {
     if (typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem('smm_cloudinary_config');
@@ -16,9 +13,16 @@ export const getCloudinaryConfig = () => {
     }
   } catch (e) {}
 
+  const envCloudName = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME) || '';
+  const envPreset = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CLOUDINARY_UPLOAD_PRESET) || '';
+
+  // Allow storage overrides even if set to empty string
+  const cloudName = storedConfig && storedConfig.cloudName !== undefined ? storedConfig.cloudName : envCloudName;
+  const uploadPreset = storedConfig && storedConfig.uploadPreset !== undefined ? storedConfig.uploadPreset : envPreset;
+
   return {
-    cloudName: (storedConfig.cloudName || envCloudName || '').trim(),
-    uploadPreset: (storedConfig.uploadPreset || envPreset || '').trim()
+    cloudName: (cloudName || '').trim(),
+    uploadPreset: (uploadPreset || '').trim()
   };
 };
 
@@ -59,6 +63,27 @@ export const uploadImageToCloudinary = async (file, { folder = 'smart_mess_manag
   formData.append('upload_preset', uploadPreset);
   if (folder) {
     formData.append('folder', folder);
+  }
+
+  // Use fetch if XMLHttpRequest is unavailable (e.g. Node/SSR/testing) or no progress tracking requested
+  if (typeof XMLHttpRequest === 'undefined') {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const errRes = await res.json().catch(() => ({}));
+      throw new Error(errRes.error?.message || `Upload failed with status ${res.status}`);
+    }
+    const data = await res.json();
+    return {
+      url: data.secure_url || data.url,
+      publicId: data.public_id,
+      width: data.width,
+      height: data.height,
+      format: data.format,
+      bytes: data.bytes
+    };
   }
 
   return new Promise((resolve, reject) => {
