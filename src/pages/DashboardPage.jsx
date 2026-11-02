@@ -19,7 +19,8 @@ import {
   Clock,
   Eye,
   Edit2,
-  ShoppingCart
+  ShoppingCart,
+  ShieldCheck
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -591,9 +592,17 @@ export const DashboardPage = () => {
                         className="border border-slate-200 dark:border-slate-700 shadow-2xs"
                       />
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900">
-                          {member.name}
-                        </h4>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-xs font-bold text-slate-900">
+                            {member.name}
+                          </h4>
+                          {member.role === 'manager' && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/70 flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                              মেস ম্যানেজার
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
@@ -684,7 +693,11 @@ export const DashboardPage = () => {
                     </button>
                   ) : (
                     <div className="flex-1 text-[11px] py-1 font-medium text-center">
-                      {isDue ? (
+                      {member.role === 'manager' ? (
+                        <span className={isDue ? 'text-rose-500 font-semibold' : 'text-emerald-600 font-semibold'}>
+                          {isDue ? 'ম্যানেজার হিসাব (বকেয়া)' : 'ম্যানেজার হিসাব (পরিশোধিত)'}
+                        </span>
+                      ) : isDue ? (
                         <span className="text-rose-500 font-semibold">ম্যানেজারকে পরিশোধ করুন</span>
                       ) : (
                         <span className="text-emerald-600 font-semibold">পরিশোধিত</span>

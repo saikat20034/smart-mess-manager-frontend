@@ -257,9 +257,14 @@ export function createNewFreshMess({ messName, managerUser }) {
     is_fresh: true
   };
 
+  const managerMemberId = managerUser
+    ? (managerUser.id && String(managerUser.id).startsWith('mem-') ? managerUser.id : `mem-${freshMess.id}-mgr`)
+    : null;
+
   const initialMembers = managerUser ? [
     {
-      id: managerUser.id,
+      id: managerMemberId,
+      user_id: managerUser.id || null,
       name: managerUser.name,
       phone: managerUser.phone || '',
       email: managerUser.email || '',
@@ -282,7 +287,7 @@ export function createNewFreshMess({ messName, managerUser }) {
   if (isSupabaseConfigured && supabase) {
     (async () => {
       try {
-        const { error: messErr } = await supabase.from('messes').insert({
+        const { error: messErr } = await supabase.from('messes').upsert({
           id: freshMess.id,
           name: freshMess.name,
           address: freshMess.address,
@@ -299,9 +304,10 @@ export function createNewFreshMess({ messName, managerUser }) {
         }
 
         if (managerUser) {
-          const { error: memErr } = await supabase.from('mess_members').insert({
-            id: managerUser.id,
+          const { error: memErr } = await supabase.from('mess_members').upsert({
+            id: managerMemberId,
             mess_id: freshMess.id,
+            user_id: managerUser.id || null,
             name: managerUser.name,
             phone: managerUser.phone || '',
             email: managerUser.email || '',
@@ -474,8 +480,13 @@ export const dataService = {
         const { data, error } = await query.order('joined_at', { ascending: true });
         if (!error && data) {
           if (data.length > 0) {
-            setLocalItem(STORAGE_KEYS.MEMBERS, data);
-            return data;
+            const sortedData = [...data].sort((a, b) => {
+              if (a.role === 'manager' && b.role !== 'manager') return -1;
+              if (b.role === 'manager' && a.role !== 'manager') return 1;
+              return 0;
+            });
+            setLocalItem(STORAGE_KEYS.MEMBERS, sortedData);
+            return sortedData;
           } else if (activeMess?.id) {
             setLocalItem(STORAGE_KEYS.MEMBERS, []);
             return [];
@@ -501,6 +512,14 @@ export const dataService = {
       }
       return m;
     });
+
+    // Sort manager first
+    normalized.sort((a, b) => {
+      if (a.role === 'manager' && b.role !== 'manager') return -1;
+      if (b.role === 'manager' && a.role !== 'manager') return 1;
+      return 0;
+    });
+
     if (mutated) {
       setLocalItem(STORAGE_KEYS.MEMBERS, normalized);
     }
@@ -509,8 +528,13 @@ export const dataService = {
 
   async addMember(memberData) {
     const role = memberData.role || 'member';
+    const memberId = (memberData.id && String(memberData.id).startsWith('mem-'))
+      ? memberData.id
+      : `mem-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+
     const newMember = {
-      id: memberData.id || `mem-${Date.now()}`,
+      id: memberId,
+      user_id: memberData.user_id || (memberData.id !== memberId ? memberData.id : null),
       joined_at: new Date().toISOString().split('T')[0],
       status: 'active',
       role,
@@ -518,16 +542,17 @@ export const dataService = {
       ...memberData
     };
 
-    // If Supabase is configured, insert to Supabase mess_members
+    // If Supabase is configured, insert/upsert to Supabase mess_members
     if (isSupabaseConfigured && supabase) {
       try {
         const rawMess = localStorage.getItem(STORAGE_KEYS.MESS);
         const activeMess = rawMess ? JSON.parse(rawMess) : null;
         const targetMessId = memberData.mess_id || activeMess?.id;
         if (targetMessId) {
-          const { data, error } = await supabase.from('mess_members').insert({
+          const { data, error } = await supabase.from('mess_members').upsert({
             id: newMember.id,
             mess_id: targetMessId,
+            user_id: newMember.user_id || null,
             name: newMember.name,
             phone: newMember.phone || '',
             email: newMember.email || '',
@@ -535,7 +560,7 @@ export const dataService = {
             status: newMember.status,
             room_number: newMember.room_number || '',
             avatar: newMember.avatar || ''
-          }).select().single();
+          }).select().maybeSingle();
           if (error) {
             console.error('Supabase addMember error:', error);
           } else if (data?.id) {

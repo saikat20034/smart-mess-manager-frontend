@@ -190,6 +190,13 @@ export function calculateMemberBalances({
     };
   });
 
+  // Ensure manager is prioritized at the top of member summaries
+  memberSummaries.sort((a, b) => {
+    if (a.role === 'manager' && b.role !== 'manager') return -1;
+    if (b.role === 'manager' && a.role !== 'manager') return 1;
+    return 0;
+  });
+
   // 8. Overall totals
   const totalDepositsAll = Object.values(depositsMap).reduce((a, b) => a + b, 0);
   const outstandingDues = memberSummaries
