@@ -15,7 +15,9 @@ import {
   Laptop,
   Crown,
   ShieldAlert,
-  Link2
+  Link2,
+  Cloud,
+  ExternalLink
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +27,11 @@ import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
 import { TransferManagerModal } from '../components/TransferManagerModal';
 import { Avatar } from '../components/Avatar';
 import { getLiveBaseUrl } from '../utils/constants';
+import {
+  getCloudinaryConfig,
+  saveCloudinaryConfig,
+  isCloudinaryConfigured
+} from '../services/cloudinary';
 
 export const SettingsPage = () => {
   const { isManager } = useAuth();
@@ -66,6 +73,15 @@ export const SettingsPage = () => {
   }, [mess]);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [cloudinaryConfig, setCloudinaryConfig] = useState(() => getCloudinaryConfig());
+  const [cloudinarySaved, setCloudinarySaved] = useState(false);
+
+  const handleSaveCloudinary = (e) => {
+    e.preventDefault();
+    saveCloudinaryConfig(cloudinaryConfig);
+    setCloudinarySaved(true);
+    setTimeout(() => setCloudinarySaved(false), 3000);
+  };
   const [copied, setCopied] = useState(false);
   const [messLogoModalOpen, setMessLogoModalOpen] = useState(false);
 
@@ -462,6 +478,103 @@ export const SettingsPage = () => {
                 <span className="text-[10px] text-slate-500">{isBn ? 'ডিভাইসের সাথে মিল রেখে' : 'Auto Match'}</span>
               </div>
             </button>
+          </div>
+        </div>
+
+        {/* Cloudinary CDN Image Hosting Configuration */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <Cloud className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {isBn ? 'ক্লাউডিনারি ইমেজ সিডিএন (Cloudinary Image Hosting)' : 'Cloudinary CDN Image Hosting'}
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {isBn
+                    ? 'মেসের প্রোফাইল ও লোগো দ্রুত ও আনলিমিটেড সিডিএন-এ লোড করার জন্য'
+                    : 'High-speed cloud image delivery for profiles & mess logos'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                  isCloudinaryConfigured()
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isCloudinaryConfigured() ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                {isCloudinaryConfigured() ? (isBn ? 'ক্লাউড সক্রিয়' : 'Connected') : (isBn ? 'সেটআপ প্রয়োজন' : 'Setup Required')}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Cloud Name (ক্লাউড নাম)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. dyx123abc"
+                value={cloudinaryConfig.cloudName}
+                onChange={(e) => setCloudinaryConfig({ ...cloudinaryConfig, cloudName: e.target.value })}
+                className="w-full text-xs border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 bg-white dark:bg-slate-800 focus:outline-none focus:border-sky-500 text-slate-900 dark:text-slate-100"
+              />
+              <span className="text-[10px] text-slate-400 mt-1 block">
+                {isBn ? 'Cloudinary Dashboard-এ প্রাপ্ত আপনার Cloud Name' : 'From your Cloudinary Dashboard'}
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Upload Preset (আনসাইনড প্রিসেট)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. smart_mess_manager"
+                value={cloudinaryConfig.uploadPreset}
+                onChange={(e) => setCloudinaryConfig({ ...cloudinaryConfig, uploadPreset: e.target.value })}
+                className="w-full text-xs border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 bg-white dark:bg-slate-800 focus:outline-none focus:border-sky-500 text-slate-900 dark:text-slate-100"
+              />
+              <span className="text-[10px] text-slate-400 mt-1 block">
+                {isBn ? 'Cloudinary Settings > Upload > Add Unsigned Preset' : 'Unsigned upload preset name'}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center justify-between flex-wrap gap-2">
+            <a
+              href="https://cloudinary.com/users/register_free"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
+            >
+              <span>{isBn ? 'ফ্রি ক্লাউডিনারি অ্যাকাউন্ট খুলুন (২৫ জিবি ফ্রি)' : 'Get Free Cloudinary Account (25GB Free)'}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+
+            <div className="flex items-center gap-2">
+              {cloudinarySaved && (
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" />
+                  {isBn ? 'ক্লাউডিনারি তথ্য সংরক্ষিত হয়েছে!' : 'Cloudinary Config Saved!'}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleSaveCloudinary}
+                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Cloud className="w-3.5 h-3.5" />
+                <span>{isBn ? 'ক্লাউডিনারি কনফিগ সেভ করুন' : 'Save Cloudinary'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </form>

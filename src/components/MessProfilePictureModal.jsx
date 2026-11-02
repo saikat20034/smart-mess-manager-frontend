@@ -10,11 +10,19 @@ import {
   Image as ImageIcon,
   Building,
   Home,
-  MapPin
+  MapPin,
+  Cloud,
+  Loader2
 } from 'lucide-react';
 import { Modal } from './Modal';
 import { useMess } from '../context/MessContext';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  uploadImageToCloudinary,
+  isCloudinaryConfigured,
+  compressImageFallback,
+  getOptimizedCloudinaryUrl
+} from '../services/cloudinary';
 
 export const MESS_PRESET_LOGOS = [
   { id: 'mess-1', label: 'Hostel Building', url: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=200&h=200&fit=crop' },
@@ -40,6 +48,9 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
   const [customUrl, setCustomUrl] = useState('');
   const [fileName, setFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingCloud, setIsUploadingCloud] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isCloudUploaded, setIsCloudUploaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const fileInputRef = useRef(null);
@@ -49,12 +60,14 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
       setPreview(mess?.logo || '');
       setCustomUrl('');
       setFileName('');
+      setIsCloudUploaded(false);
+      setUploadProgress(0);
       setErrorMsg('');
     }
   }, [isOpen, mess?.logo]);
 
-  // Handle local file selection
-  const handleFileChange = (e) => {
+  // Handle local file selection with direct Cloudinary upload
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -63,19 +76,50 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg(isBn ? 'ছবির সাইজ সর্বোচ্চ 5MB হতে পারবে' : 'Image size must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg(isBn ? 'ছবির সাইজ সর্বোচ্চ 10MB হতে পারবে' : 'Image size must be less than 10MB');
       return;
     }
 
     setErrorMsg('');
     setFileName(file.name);
+    setIsCloudUploaded(false);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setPreview(event.target.result);
-    };
-    reader.readAsDataURL(file);
+    if (isCloudinaryConfigured()) {
+      setIsUploadingCloud(true);
+      setUploadProgress(0);
+      try {
+        const result = await uploadImageToCloudinary(file, {
+          folder: 'smart_mess_manager/mess_logos',
+          onProgress: (p) => setUploadProgress(p)
+        });
+        const optimizedUrl = getOptimizedCloudinaryUrl(result.url, { width: 400, height: 400 });
+        setPreview(optimizedUrl);
+        setIsCloudUploaded(true);
+      } catch (err) {
+        console.warn('Cloudinary upload error:', err);
+        setErrorMsg(isBn ? `ক্লাউডিনারি আপলোড সমস্যা: ${err.message}` : `Cloudinary upload error: ${err.message}`);
+        // Fallback to client-side compressed image
+        try {
+          const fallbackData = await compressImageFallback(file, 300, 300, 0.7);
+          setPreview(fallbackData);
+        } catch (cErr) {
+          setErrorMsg(cErr.message);
+        }
+      } finally {
+        setIsUploadingCloud(false);
+      }
+    } else {
+      // Cloudinary not configured yet: compress client-side to prevent localStorage/DB overflow
+      try {
+        const fallbackData = await compressImageFallback(file, 300, 300, 0.7);
+        setPreview(fallbackData);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onload = (event) => setPreview(event.target.result);
+        reader.readAsDataURL(file);
+      }
+    }
   };
 
   const handleApplyUrl = (e) => {
@@ -245,24 +289,69 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
               className="hidden"
             />
             <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-rose-400 dark:hover:border-rose-500 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-800/30 hover:bg-rose-50/20"
+              onClick={() => !isUploadingCloud && fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all bg-slate-50/50 dark:bg-slate-800/30 ${
+                isUploadingCloud
+                  ? 'border-sky-400 bg-sky-50/30 cursor-wait'
+                  : 'border-slate-300 dark:border-slate-700 hover:border-rose-400 dark:hover:border-rose-500 cursor-pointer hover:bg-rose-50/20'
+              }`}
             >
               <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center mb-2 shadow-2xs">
-                <Upload className="w-6 h-6" />
+                {isUploadingCloud ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+                ) : (
+                  <Upload className="w-6 h-6" />
+                )}
               </div>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                {isBn ? 'মেস বা হোস্টেলের ছবি আপলোড করতে ক্লিক করুন' : 'Click to browse mess logo or hostel photo'}
+                {isUploadingCloud
+                  ? (isBn ? 'ক্লাউডিনারিতে আপলোড হচ্ছে...' : 'Uploading to Cloudinary...')
+                  : (isBn ? 'মেস বা হোস্টেলের ছবি আপলোড করতে ক্লিক করুন' : 'Click to browse mess logo or hostel photo')}
               </p>
               <p className="text-[11px] text-slate-400 mt-1">
-                JPG, PNG, WebP • Max 5MB
+                JPG, PNG, WebP • Max 10MB
               </p>
-              {fileName && (
+
+              {/* Upload Progress Bar */}
+              {isUploadingCloud && (
+                <div className="mt-3 max-w-xs mx-auto">
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-sky-500 h-full transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-sky-600 dark:text-sky-400 font-semibold mt-1 block">
+                    {uploadProgress}% {isBn ? 'সম্পন্ন' : 'Completed'}
+                  </span>
+                </div>
+              )}
+
+              {/* Success Badge */}
+              {isCloudUploaded && (
+                <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-lg">
+                  <Cloud className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{isBn ? 'ক্লাউডিনারি সিডিএন-এ সংরক্ষিত ✓' : 'Hosted on Cloudinary CDN ✓'}</span>
+                </div>
+              )}
+
+              {fileName && !isCloudUploaded && !isUploadingCloud && (
                 <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
                   <Check className="w-3 h-3" />
                   <span>{fileName}</span>
                 </div>
               )}
+            </div>
+
+            {/* Cloudinary CDN Indicator / Tip */}
+            <div className="flex items-center justify-between px-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1">
+                <Cloud className="w-3 h-3 text-sky-500" />
+                <span>{isCloudinaryConfigured() ? (isBn ? 'ক্লাউডিনারি ক্লাউড সক্রিয়' : 'Cloudinary CDN Active') : (isBn ? 'লোকাল অপ্টিমাইজড' : 'Local Compressed')}</span>
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {isBn ? 'ফাস্ট সিডিএন ইমেজ ডেলিভারি' : 'Fast CDN Delivery'}
+              </span>
             </div>
           </div>
         )}
