@@ -81,17 +81,26 @@ export const RegisterPage = () => {
       if (mode === 'join') {
         const cleanCode = formData.inviteCode.trim().toUpperCase();
 
+        let tableMissing = false;
         if (isSupabaseConfigured && supabase) {
           try {
             const { data, error: sbErr } = await supabase
               .from('messes')
               .select('*')
               .eq('invite_code', cleanCode)
-              .single();
-            if (!sbErr && data) {
+              .maybeSingle();
+            if (sbErr && sbErr.code === 'PGRST205') {
+              tableMissing = true;
+            } else if (!sbErr && data) {
               targetMess = data;
             }
           } catch (e) {}
+        }
+
+        if (tableMissing) {
+          setError('Supabase ডাটাবেসে এখনও টেবিল তৈরি করা হয়নি! দয়া করে Supabase SQL Editor-এ schema.sql রান করুন।');
+          setLoading(false);
+          return;
         }
 
         if (!targetMess && typeof localStorage !== 'undefined') {

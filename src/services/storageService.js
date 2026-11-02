@@ -379,20 +379,60 @@ export const dataService = {
     if (typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true') {
       return null;
     }
+    const localMess = getLocalItem(STORAGE_KEYS.MESS, null);
+
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('messes').select('*').limit(1).single();
-        if (!error && data) return data;
+        let query = supabase.from('messes').select('*');
+        if (localMess?.id) {
+          query = query.eq('id', localMess.id);
+        }
+        const { data, error } = await query.limit(1).maybeSingle();
+        if (!error && data) {
+          setLocalItem(STORAGE_KEYS.MESS, data);
+          return data;
+        } else if (!data && localMess?.id && localMess?.invite_code) {
+          // Local mess exists but not in Supabase yet -> Auto upload to Supabase!
+          await supabase.from('messes').upsert({
+            id: localMess.id,
+            name: localMess.name || 'আমাদের মেস',
+            address: localMess.address || 'বাংলাদেশ',
+            currency: localMess.currency || 'BDT',
+            invite_code: localMess.invite_code.toUpperCase(),
+            month_start_day: localMess.month_start_day || 1,
+            breakfast_unit: localMess.breakfast_unit || 1.0,
+            lunch_unit: localMess.lunch_unit || 1.0,
+            dinner_unit: localMess.dinner_unit || 1.0,
+            shared_expense_policy: localMess.shared_expense_policy || 'equal'
+          });
+
+          // Also sync members
+          const rawMembers = getLocalItem(STORAGE_KEYS.MEMBERS, []);
+          if (Array.isArray(rawMembers) && rawMembers.length > 0) {
+            for (const m of rawMembers) {
+              await supabase.from('mess_members').upsert({
+                id: m.id,
+                mess_id: localMess.id,
+                name: m.name,
+                phone: m.phone || '',
+                email: m.email || '',
+                role: m.role || 'member',
+                status: m.status || 'active',
+                room_number: m.room_number || '',
+                avatar: m.avatar || ''
+              });
+            }
+          }
+        }
       } catch (err) {
         console.warn('Supabase getMess network error, using local data:', err);
       }
     }
-    const mess = getLocalItem(STORAGE_KEYS.MESS, null);
-    if (mess && (mess.breakfast_unit === 0.5 || !mess.breakfast_unit)) {
-      mess.breakfast_unit = 1.0;
-      setLocalItem(STORAGE_KEYS.MESS, mess);
+    if (localMess && (localMess.breakfast_unit === 0.5 || !localMess.breakfast_unit)) {
+      localMess.breakfast_unit = 1.0;
+      setLocalItem(STORAGE_KEYS.MESS, localMess);
     }
-    return mess;
+    return localMess;
   },
 
   async updateMess(updates) {

@@ -14,14 +14,27 @@ const supabaseUrl = getEnvOrStorage('VITE_SUPABASE_URL') || '';
 const supabaseAnonKey = getEnvOrStorage('VITE_SUPABASE_ANON_KEY') || '';
 
 export const isSupabaseConfigured = Boolean(
+  (typeof process === 'undefined' || process.env?.NODE_ENV !== 'test') &&
   supabaseUrl &&
   supabaseAnonKey &&
   supabaseUrl !== 'https://your-project.supabase.co' &&
   !supabaseUrl.includes('your-project')
 );
 
+class NodeMockWebSocket {
+  constructor() {}
+  addEventListener() {}
+  removeEventListener() {}
+  send() {}
+  close() {}
+}
+
+const realtimeOptions = (typeof window === 'undefined' && typeof WebSocket === 'undefined')
+  ? { realtime: { transport: NodeMockWebSocket } }
+  : {};
+
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, realtimeOptions)
   : null;
 
 export function getSupabaseCredentials() {
