@@ -12,7 +12,8 @@ import {
   Home,
   MapPin,
   Cloud,
-  Loader2
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { Modal } from './Modal';
 import { useMess } from '../context/MessContext';
@@ -40,7 +41,7 @@ export const MESS_PRESET_LOGOS = [
 ];
 
 export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
-  const { mess, updateMessSettings } = useMess();
+  const { mess, updateMessSettings, updateMessLogo } = useMess();
   const { isBn } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('upload'); // 'upload', 'presets', 'url'
@@ -144,7 +145,9 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (updateMessSettings) {
+      if (updateMessLogo) {
+        await updateMessLogo(preview);
+      } else if (updateMessSettings) {
         await updateMessSettings({ logo: preview });
       }
       if (onPhotoSaved) {
@@ -168,16 +171,16 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
       title={
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-rose-500/10 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-            <Building2 className="w-4 h-4" />
+            <Camera className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              {isBn ? 'মেস প্রোফাইল ছবি / লোগো' : 'Mess Profile Picture / Logo'}
+              {isBn ? 'মেস প্রোফাইল ছবি' : 'Mess Profile Picture'}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
               {isBn
-                ? 'মেসের লোগো বা হোস্টেল ছবি সেট করুন (মেম্বার প্রোফাইল থেকে সম্পূর্ণ আলাদা)'
-                : 'Set mess logo or hostel photo (distinct from personal user profile)'}
+                ? 'মেসের প্রোফাইল ছবি বা লোগো পরিবর্তন করুন (সকল মেম্বারের কাছে দৃশ্যমান হবে)'
+                : 'Upload or change mess profile picture / logo'}
             </p>
           </div>
         </div>
@@ -187,18 +190,25 @@ export const MessProfilePictureModal = ({ isOpen, onClose, onPhotoSaved }) => {
       <div className="space-y-5">
         {/* Live Mess Profile Card Preview */}
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center gap-4">
-          <div className="relative group shrink-0">
+          <div
+            onClick={() => !isUploadingCloud && fileInputRef.current?.click()}
+            className="relative group shrink-0 cursor-pointer"
+            title={isBn ? "মেস ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change mess photo"}
+          >
             {preview ? (
               <img
                 src={preview}
                 alt={mess?.name || 'Mess Logo'}
-                className="w-20 h-20 rounded-full object-cover border-4 border-rose-500 shadow-md ring-4 ring-rose-500/10"
+                className="w-20 h-20 rounded-full object-cover border-4 border-rose-500 shadow-md ring-4 ring-rose-500/10 group-hover:opacity-85 transition-opacity"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-3xl font-bold shadow-md group-hover:opacity-85 transition-opacity">
                 {initialLetter}
               </div>
             )}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-800">
               <Building2 className="w-3.5 h-3.5 text-rose-400" />
             </div>

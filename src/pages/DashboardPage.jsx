@@ -21,7 +21,8 @@ import {
   Edit2,
   ShoppingCart,
   ShieldCheck,
-  Phone
+  Phone,
+  Camera
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +35,7 @@ import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { InviteShareCard } from '../components/InviteShareCard';
 import { Modal } from '../components/Modal';
 import { Avatar } from '../components/Avatar';
+import { MessProfilePictureModal } from '../components/MessProfilePictureModal';
 
 export const DashboardPage = () => {
   const { user, isManager } = useAuth();
@@ -51,6 +53,7 @@ export const DashboardPage = () => {
 
   // Modals state
   const [bazarRosterOpen, setBazarRosterOpen] = useState(false);
+  const [messPhotoModalOpen, setMessPhotoModalOpen] = useState(false);
   const [reminderTarget, setReminderTarget] = useState(null);
   const [quickDepositOpen, setQuickDepositOpen] = useState(false);
   const [depositForm, setDepositForm] = useState({
@@ -241,13 +244,24 @@ export const DashboardPage = () => {
           {/* Dark Header */}
           <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-              <Avatar
-                src={mess?.logo}
-                name={mess?.name || 'Mess'}
-                size="md"
-                border={false}
-                className="border border-rose-400"
-              />
+              <button
+                type="button"
+                onClick={() => setMessPhotoModalOpen(true)}
+                className="relative group cursor-pointer focus:outline-none shrink-0"
+                title={isBn ? "মেস প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change mess profile picture"}
+                aria-label="Change Mess Profile Picture"
+              >
+                <Avatar
+                  src={mess?.logo}
+                  name={mess?.name || 'Mess'}
+                  size="md"
+                  border={false}
+                  className="border-2 border-rose-400 group-hover:ring-2 group-hover:ring-rose-300 transition-all shadow-xs"
+                />
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="w-3.5 h-3.5 text-white" />
+                </div>
+              </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 group">
                   <h2
@@ -958,6 +972,12 @@ export const DashboardPage = () => {
           )}
         </form>
       </Modal>
+
+      {/* Mess Profile Picture Modal */}
+      <MessProfilePictureModal
+        isOpen={messPhotoModalOpen}
+        onClose={() => setMessPhotoModalOpen(false)}
+      />
     </div>
   );
 };

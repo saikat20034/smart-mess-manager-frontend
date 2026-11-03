@@ -386,6 +386,7 @@ export const dataService = {
       return null;
     }
     const localMess = getLocalItem(STORAGE_KEYS.MESS, null);
+    const savedLogo = (typeof localStorage !== 'undefined' ? localStorage.getItem('smm_mess_logo') : null) || localMess?.logo || '';
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -395,8 +396,13 @@ export const dataService = {
         }
         const { data, error } = await query.limit(1).maybeSingle();
         if (!error && data) {
-          setLocalItem(STORAGE_KEYS.MESS, data);
-          return data;
+          const effectiveLogo = data.logo || savedLogo || '';
+          const merged = { ...localMess, ...data, logo: effectiveLogo };
+          if (effectiveLogo && typeof localStorage !== 'undefined') {
+            localStorage.setItem('smm_mess_logo', effectiveLogo);
+          }
+          setLocalItem(STORAGE_KEYS.MESS, merged);
+          return merged;
         } else if (!data && localMess?.id && localMess?.invite_code) {
           // Local mess exists but not in Supabase yet -> Auto upload to Supabase!
           await supabase.from('messes').upsert({
@@ -436,6 +442,9 @@ export const dataService = {
     }
     if (localMess && (localMess.breakfast_unit === 0.5 || !localMess.breakfast_unit)) {
       localMess.breakfast_unit = 1.0;
+    }
+    if (localMess) {
+      localMess.logo = localMess.logo || savedLogo || '';
       setLocalItem(STORAGE_KEYS.MESS, localMess);
     }
     return localMess;
@@ -443,12 +452,32 @@ export const dataService = {
 
   async updateMess(updates) {
     const current = getLocalItem(STORAGE_KEYS.MESS, INITIAL_MESS);
-    const updated = { ...current, ...updates, updated_at: new Date().toISOString() };
+    const savedLogo = updates.logo !== undefined ? updates.logo : ((typeof localStorage !== 'undefined' ? localStorage.getItem('smm_mess_logo') : null) || current?.logo || '');
+    if (typeof localStorage !== 'undefined' && updates.logo !== undefined) {
+      if (updates.logo) {
+        localStorage.setItem('smm_mess_logo', updates.logo);
+      } else {
+        localStorage.removeItem('smm_mess_logo');
+      }
+    }
+    const updated = { ...current, ...updates, logo: savedLogo, updated_at: new Date().toISOString() };
     setLocalItem(STORAGE_KEYS.MESS, updated);
+
+    // Keep all registered messes list updated
+    try {
+      const allMesses = getLocalItem(STORAGE_KEYS.ALL_MESSES, []);
+      if (Array.isArray(allMesses)) {
+        const idx = allMesses.findIndex(m => m.id === updated.id);
+        if (idx !== -1) {
+          allMesses[idx] = { ...allMesses[idx], ...updated };
+          setLocalItem(STORAGE_KEYS.ALL_MESSES, allMesses);
+        }
+      }
+    } catch (e) {}
 
     if (isSupabaseConfigured && supabase && updated.id) {
       try {
-        await supabase.from('messes').update({
+        const payload = {
           name: updated.name,
           address: updated.address,
           month_start_day: updated.month_start_day,
@@ -457,10 +486,19 @@ export const dataService = {
           dinner_unit: updated.dinner_unit,
           shared_expense_policy: updated.shared_expense_policy,
           updated_at: updated.updated_at
-        }).eq('id', updated.id);
+        };
+        // Attempt update with logo if column exists
+        if (updated.logo !== undefined) {
+          supabase.from('messes').update({ logo: updated.logo }).eq('id', updated.id).then(() => {}).catch(() => {});
+        }
+        await supabase.from('messes').update(payload).eq('id', updated.id);
       } catch (err) {
         console.warn('Supabase updateMess error:', err);
       }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('smm_mess_updated', { detail: updated }));
     }
 
     this.logActivity('UPDATE_SETTINGS', 'মেস সেটিংস আপডেট', 'মেস তথ্য ও নিয়ম পরিবর্তন করা হয়েছে');

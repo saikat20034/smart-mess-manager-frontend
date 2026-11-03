@@ -17,7 +17,8 @@ import {
   ShieldAlert,
   Link2,
   Cloud,
-  ExternalLink
+  ExternalLink,
+  Camera
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -157,14 +158,22 @@ export const SettingsPage = () => {
 
           {/* Mess Logo / Profile Picture Row */}
           <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-            <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMessLogoModalOpen(true)}
+              className="relative shrink-0 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500 rounded-full"
+              title={isBn ? "মেস প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change mess profile picture"}
+            >
               <Avatar
                 src={mess?.logo}
                 name={form.name || 'M'}
                 size="xl"
                 border={true}
               />
-            </div>
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-5 h-5 text-white drop-shadow" />
+              </div>
+            </button>
             <div className="flex-1 min-w-0">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 {isBn ? 'মেস প্রোফাইল ছবি / লোগো' : 'Mess Profile Picture / Logo'}
@@ -175,15 +184,13 @@ export const SettingsPage = () => {
                   : 'Distinct from your personal manager profile photo'}
               </p>
             </div>
-            {isManager && (
-              <button
-                type="button"
-                onClick={() => setMessLogoModalOpen(true)}
-                className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                {isBn ? 'লোগো পরিবর্তন' : 'Change Logo'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMessLogoModalOpen(true)}
+              className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              {isBn ? 'ছবি পরিবর্তন' : 'Change Photo'}
+            </button>
           </div>
 
           <div>

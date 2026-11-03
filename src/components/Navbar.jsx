@@ -95,7 +95,7 @@ export const Navbar = ({ onToggleSidebar }) => {
               type="button"
               onClick={() => setMessPhotoModalOpen(true)}
               className="relative group cursor-pointer focus:outline-none shrink-0"
-              title={isBn ? "মেস প্রোফাইল ছবি / লোগো পরিবর্তন করতে ক্লিক করুন" : "Click to change Mess Profile Picture / Logo"}
+              title={isBn ? "মেস প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change Mess Profile Picture"}
               aria-label="Change mess profile picture"
             >
               {mess?.logo ? (
@@ -109,6 +109,9 @@ export const Navbar = ({ onToggleSidebar }) => {
                   {messInitial}
                 </div>
               )}
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-4 h-4 text-white" />
+              </div>
               {/* Building badge indicating Mess identity */}
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-slate-900 border border-white dark:border-slate-800 text-white flex items-center justify-center shadow-xs group-hover:bg-rose-500 transition-colors">
                 <Building2 className="w-2.5 h-2.5 text-rose-300 group-hover:text-white" />
@@ -232,8 +235,8 @@ export const Navbar = ({ onToggleSidebar }) => {
                     onClick={() => setMessPhotoModalOpen(true)}
                     className="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
                   >
-                    <Building2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>{isBn ? 'মেস লোগো পরিবর্তন' : 'Change Mess Logo'}</span>
+                    <Building2 className="w-3.5 h-3.5 text-rose-500" />
+                    <span>{isBn ? 'মেস প্রোফাইল ছবি পরিবর্তন' : 'Change Mess Profile Picture'}</span>
                   </button>
                 )}
 

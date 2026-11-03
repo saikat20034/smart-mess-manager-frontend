@@ -213,6 +213,31 @@ export const MessProvider = ({ children }) => {
     await refreshData();
   };
 
+  const updateMessLogo = async (newLogo) => {
+    setMess((prev) => ({ ...(prev || {}), logo: newLogo }));
+    if (typeof localStorage !== 'undefined') {
+      if (newLogo) {
+        localStorage.setItem('smm_mess_logo', newLogo);
+      } else {
+        localStorage.removeItem('smm_mess_logo');
+      }
+    }
+    const res = await dataService.updateMess({ logo: newLogo });
+    return res;
+  };
+
+  useEffect(() => {
+    const handleMessUpdated = (e) => {
+      if (e.detail) {
+        setMess((prev) => ({ ...(prev || {}), ...e.detail }));
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('smm_mess_updated', handleMessUpdated);
+      return () => window.removeEventListener('smm_mess_updated', handleMessUpdated);
+    }
+  }, []);
+
   const finalizeMonthlySettlement = async (snapshotData) => {
     const [yearStr, monthStr] = selectedMonth.split('-');
     const record = await dataService.finalizeSettlement({
@@ -359,6 +384,7 @@ export const MessProvider = ({ children }) => {
         deactivateMember,
         transferManagerRole,
         updateMessSettings,
+        updateMessLogo,
         finalizeMonthlySettlement,
         addBazarItem,
         toggleBazarItem,

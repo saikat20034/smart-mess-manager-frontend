@@ -11,19 +11,23 @@ import {
   Settings,
   Database,
   LogOut,
-  X
+  X,
+  Building2,
+  Camera
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useMess } from '../context/MessContext';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfilePictureModal } from './ProfilePictureModal';
+import { MessProfilePictureModal } from './MessProfilePictureModal';
 import { Avatar } from './Avatar';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isManager, isAdmin, logout } = useAuth();
   const { t, isBn } = useLanguage();
   const {
+    mess,
     selectedMonth,
     isCurrentMonth,
     switchToPreviousMonth,
@@ -34,6 +38,9 @@ export const Sidebar = ({ isOpen, onClose }) => {
   } = useMess();
   const navigate = useNavigate();
   const [profilePhotoModalOpen, setProfilePhotoModalOpen] = useState(false);
+  const [messPhotoModalOpen, setMessPhotoModalOpen] = useState(false);
+
+  const messInitial = mess?.name ? mess.name.trim().charAt(0).toUpperCase() : 'M';
 
   // Resolve active profile accurately, prioritizing actual mess members over stale demo defaults
   const activeUser = React.useMemo(() => {
@@ -81,6 +88,44 @@ export const Sidebar = ({ isOpen, onClose }) => {
           className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
         >
           <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Top Mess Profile Picture Header */}
+      <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <button
+          type="button"
+          onClick={() => setMessPhotoModalOpen(true)}
+          className="flex items-center gap-2.5 text-left w-full group cursor-pointer hover:opacity-90 transition-opacity"
+          title={isBn ? "মেস প্রোফাইল ছবি পরিবর্তন করতে ক্লিক করুন" : "Click to change mess profile picture"}
+        >
+          <div className="relative shrink-0">
+            {mess?.logo ? (
+              <img
+                src={mess.logo}
+                alt={mess?.name || "Mess"}
+                className="w-8 h-8 rounded-full border-2 border-rose-500 object-cover shadow-2xs group-hover:ring-2 group-hover:ring-rose-400 transition-all"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shadow-2xs group-hover:ring-2 group-hover:ring-rose-400 transition-all">
+                {messInitial}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-3 h-3 text-white" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs border border-white dark:border-slate-800">
+              <Building2 className="w-2 h-2 text-rose-400" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+              {mess?.name || (isBn ? 'আমাদের মেস' : 'Our Mess')}
+            </span>
+            <span className="text-[10px] text-rose-500 font-semibold flex items-center gap-1">
+              <Building2 className="w-2.5 h-2.5" /> {isBn ? 'মেস প্রোফাইল' : 'Mess Profile'}
+            </span>
+          </div>
         </button>
       </div>
 
@@ -193,6 +238,11 @@ export const Sidebar = ({ isOpen, onClose }) => {
       <ProfilePictureModal
         isOpen={profilePhotoModalOpen}
         onClose={() => setProfilePhotoModalOpen(false)}
+      />
+
+      <MessProfilePictureModal
+        isOpen={messPhotoModalOpen}
+        onClose={() => setMessPhotoModalOpen(false)}
       />
     </div>
   );
