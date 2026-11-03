@@ -288,7 +288,93 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password }) => {
     setLoading(true);
     try {
-      // 1. Check if the active mess has been deleted by Super Admin or no mess exists
+      const cleanInput = (email || '').trim().toLowerCase();
+
+      // 1. If Supabase is configured, authenticate via Cloud Database first
+      if (isSupabaseConfigured && supabase) {
+        try {
+          // A. Attempt Supabase Auth sign-in if password provided
+          let sbUser = null;
+          try {
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+            if (!authError && authData?.user) {
+              sbUser = authData.user;
+            }
+          } catch (e) {
+            // ignore network/email confirmation error and proceed with member lookup
+          }
+
+          // B. Query active mess member in Supabase
+          const { data: memberRows, error: memErr } = await supabase
+            .from('mess_members')
+            .select('*')
+            .or(`email.ilike.${cleanInput},phone.eq.${cleanInput}`)
+            .limit(1);
+
+          if (!memErr && memberRows && memberRows.length > 0) {
+            const member = memberRows[0];
+
+            // C. Query mess from Supabase to confirm mess is active in the database
+            const { data: messData, error: messErr } = await supabase
+              .from('messes')
+              .select('*')
+              .eq('id', member.mess_id)
+              .maybeSingle();
+
+            if (!messErr && messData) {
+              // Active mess confirmed in cloud database! Clear any stale local deleted flag
+              if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('smm_active_mess_deleted');
+                localStorage.setItem('smm_mess_data_v2', JSON.stringify(messData));
+              }
+
+              // Fetch and cache all active members for this mess
+              try {
+                const { data: allMems } = await supabase
+                  .from('mess_members')
+                  .select('*')
+                  .eq('mess_id', messData.id)
+                  .order('joined_at', { ascending: true });
+
+                if (allMems && allMems.length > 0 && typeof localStorage !== 'undefined') {
+                  const sortedMems = [...allMems].sort((a, b) => {
+                    if (a.role === 'manager' && b.role !== 'manager') return -1;
+                    if (b.role === 'manager' && a.role !== 'manager') return 1;
+                    return 0;
+                  });
+                  localStorage.setItem('smm_members_v2', JSON.stringify(sortedMems));
+                }
+              } catch (e) {}
+
+              const loggedUser = {
+                id: member.id,
+                email: member.email,
+                name: member.name,
+                phone: member.phone || '',
+                role: member.role || (sbUser ? 'manager' : 'member'),
+                avatar: member.avatar || ''
+              };
+
+              setUser(loggedUser);
+              if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('smm_auth_user_v2', JSON.stringify(loggedUser));
+              }
+
+              return { success: true, user: loggedUser };
+            } else if (!messErr && !messData) {
+              // Mess was truly deleted from cloud database
+              return {
+                success: false,
+                error: 'মেসটি ডাটাবেস থেকে মুছে ফেলা হয়েছে! আপনি আর এই মেসে লগইন করতে পারবেন না। নতুন মেস শুরু করতে রেজিস্টার করুন।'
+              };
+            }
+          }
+        } catch (sbErr) {
+          console.warn('Supabase login check error, falling back to local credentials:', sbErr);
+        }
+      }
+
+      // 2. Local Fallback (offline mode / mock test environment)
       const isMessDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('smm_active_mess_deleted') === 'true';
       const rawMess = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_mess_data_v2') : null;
       const rawRegMesses = typeof localStorage !== 'undefined' ? localStorage.getItem('smm_all_registered_messes') : null;
@@ -304,69 +390,49 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      if (isSupabaseConfigured && supabase) {
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-          if (!error && data?.user) {
-            const loggedUser = {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.user_metadata?.full_name || email.split('@')[0],
-              role: 'manager',
-              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-            };
-            setUser(loggedUser);
-            return { success: true, user: loggedUser };
-          }
-        } catch (sbErr) {
-          console.warn('Supabase sign-in network error, trying local credentials:', sbErr);
-        }
-      }
-
-      const cleanInput = (email || '').trim().toLowerCase();
       let storedMembers = [];
       try {
         const raw = localStorage.getItem('smm_members_v2');
         if (raw) storedMembers = JSON.parse(raw);
       } catch (e) {}
 
-        // 1. Look for existing member matching email, phone, or name
-        const matchedMember = storedMembers.find(
-          (m) =>
-            (m.email && m.email.trim().toLowerCase() === cleanInput) ||
-            (m.phone && m.phone.trim() === cleanInput) ||
-            (m.name && m.name.trim().toLowerCase() === cleanInput)
-        );
+      // Look for existing member matching email, phone, or name
+      const matchedMember = storedMembers.find(
+        (m) =>
+          (m.email && m.email.trim().toLowerCase() === cleanInput) ||
+          (m.phone && m.phone.trim() === cleanInput) ||
+          (m.name && m.name.trim().toLowerCase() === cleanInput)
+      );
 
-        if (matchedMember) {
-          setUser(matchedMember);
-          localStorage.setItem('smm_auth_user_v2', JSON.stringify(matchedMember));
-          return { success: true, user: matchedMember };
-        }
+      if (matchedMember) {
+        setUser(matchedMember);
+        localStorage.setItem('smm_auth_user_v2', JSON.stringify(matchedMember));
+        return { success: true, user: matchedMember };
+      }
 
-        // 2. Explicit demo logins ONLY IF the member actually exists in stored members
-        if (cleanInput.includes('demo-manager') || cleanInput === 'saikat@mess.ac.bd') {
-          const saikat = storedMembers.find((m) => m.email === 'saikat@mess.ac.bd' || m.role === 'manager');
-          if (saikat) {
-            setUser(saikat);
-            localStorage.setItem('smm_auth_user_v2', JSON.stringify(saikat));
-            return { success: true, user: saikat };
-          }
+      // Explicit demo logins ONLY IF the member actually exists in stored members
+      if (cleanInput.includes('demo-manager') || cleanInput === 'saikat@mess.ac.bd') {
+        const saikat = storedMembers.find((m) => m.email === 'saikat@mess.ac.bd' || m.role === 'manager');
+        if (saikat) {
+          setUser(saikat);
+          localStorage.setItem('smm_auth_user_v2', JSON.stringify(saikat));
+          return { success: true, user: saikat };
         }
-        if (cleanInput.includes('demo-member') || cleanInput === 'shakib@mess.ac.bd') {
-          const shakib = storedMembers.find((m) => m.email === 'shakib@mess.ac.bd' || m.name?.toLowerCase().includes('shakib'));
-          if (shakib) {
-            setUser(shakib);
-            localStorage.setItem('smm_auth_user_v2', JSON.stringify(shakib));
-            return { success: true, user: shakib };
-          }
+      }
+      if (cleanInput.includes('demo-member') || cleanInput === 'shakib@mess.ac.bd') {
+        const shakib = storedMembers.find((m) => m.email === 'shakib@mess.ac.bd' || m.name?.toLowerCase().includes('shakib'));
+        if (shakib) {
+          setUser(shakib);
+          localStorage.setItem('smm_auth_user_v2', JSON.stringify(shakib));
+          return { success: true, user: shakib };
         }
+      }
 
-        // If member not found in the mess roster, reject login
-        return {
-          success: false,
-          error: 'ভুল ইমেইল অথবা পাসওয়ার্ড! এই মেসে কোনো সক্রিয় মেম্বার খুঁজে পাওয়া যায়নি।'
-        };
+      // If member not found in the mess roster, reject login
+      return {
+        success: false,
+        error: 'ভুল ইমেইল অথবা পাসওয়ার্ড! এই মেসে কোনো সক্রিয় মেম্বার খুঁজে পাওয়া যায়নি।'
+      };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
