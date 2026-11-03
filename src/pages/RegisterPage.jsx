@@ -141,7 +141,7 @@ export const RegisterPage = () => {
       return;
     }
     if (!isEmailVerified) {
-      setError('দয়া করে সাইন আপ সম্পন্ন করতে প্রথমে আপনার ইমেইলটি ভেরিফাই করুন! (কোড পাঠান বাটনে ক্লিক করে ইমেইলের কোডটি যাচাই করুন)');
+      setError('ইমেইল ভেরিফিকেশন ছাড়া সাইন আপ করা সম্ভব নয়! দয়া করে আপনার ইমেইলে পাঠানো ৬-ডিজিটের কোডটি দিয়ে ভেরিফাই করুন।');
       return;
     }
     if (formData.password.length < 6) {
@@ -627,14 +627,43 @@ export const RegisterPage = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-3 px-4 rounded-xl shadow-xs text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              <span>{loading ? 'একাউন্ট তৈরি হচ্ছে...' : 'সাইন আপ সম্পন্ন করুন'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="pt-2">
+              {!isEmailVerified && (
+                <div className="mb-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px] flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>
+                    <strong>ইমেইল ভেরিফিকেশন বাধ্যতামূলক:</strong> উপরে আপনার ইমেইলে কোড পাঠিয়ে যাচাই না করা পর্যন্ত সাইন আপ লক করা থাকবে।
+                  </span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !isEmailVerified}
+                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl shadow-xs text-xs font-bold transition-all ${
+                  isEmailVerified
+                    ? 'text-white bg-rose-500 hover:bg-rose-600 cursor-pointer shadow-rose-500/20 shadow-md'
+                    : 'text-slate-400 bg-slate-100 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>একাউন্ট তৈরি হচ্ছে...</span>
+                  </>
+                ) : !isEmailVerified ? (
+                  <>
+                    <Lock className="w-4 h-4 text-slate-400" />
+                    <span>প্রথমে ইমেইল ভেরিফাই করুন (লক করা আছে)</span>
+                  </>
+                ) : (
+                  <>
+                    <span>সাইন আপ সম্পন্ন করুন</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
