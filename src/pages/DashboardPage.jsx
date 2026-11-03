@@ -20,7 +20,8 @@ import {
   Eye,
   Edit2,
   ShoppingCart,
-  ShieldCheck
+  ShieldCheck,
+  Phone
 } from 'lucide-react';
 import { useMess } from '../context/MessContext';
 import { useAuth } from '../context/AuthContext';
@@ -603,6 +604,19 @@ export const DashboardPage = () => {
                             </span>
                           )}
                         </div>
+
+                        {/* Mobile Number below the member name */}
+                        {member.phone ? (
+                          <a
+                            href={`tel:${member.phone}`}
+                            className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mt-0.5"
+                            title="কল করুন"
+                          >
+                            <Phone className="w-2.5 h-2.5 text-slate-400" />
+                            <span>{member.phone}</span>
+                          </a>
+                        ) : null}
+
                         <div className="flex items-center gap-1 mt-0.5">
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
